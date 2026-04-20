@@ -1,0 +1,73 @@
+=======================================================================
+                        JDK STUDIOS LICENSE AGREEMENT
+=======================================================================
+
+Copyright (c) 2026 JDK Studios. All rights reserved.
+
+This End-User License Agreement ("EULA" or "License") is a legal 
+agreement between you (either an individual or a single entity) and 
+JDK Studios ("Licensor") for the use of the JDK Studios website, 
+including all related digital content, media, and source code.
+
+By accessing, browsing, or utilizing any content hosted on the 
+JDK Studios platform, you agree to be bound by the terms of this License.
+
+1. INTELLECTUAL PROPERTY & OWNERSHIP
+All content hosted on this website is the exclusive property of 
+JDK Studios and is protected by international copyright laws. 
+This includes, but is not limited to:
+
+a) Audio and Musical Compositions: All original tracks, mixes, sound 
+   recordings, and promotional audio materials.
+b) Photographic Assets: All original photography, including RAW, C-RAW, 
+   and processed image files, galleries, and visual media.
+c) Software and Web Assets: The custom website architecture, interactive 
+   elements, graphical user interfaces, and underlying source code.
+
+2. GRANT OF LICENSE
+JDK Studios grants you a revocable, non-exclusive, non-transferable, 
+limited license to access and view the website and its content strictly 
+for personal, non-commercial purposes. 
+
+3. RESTRICTIONS
+You agree not to, and you will not permit others to:
+- License, sell, rent, lease, assign, distribute, transmit, host, 
+  outsource, disclose, or otherwise commercially exploit any media, 
+  music, or photography found on the platform.
+- Modify, make derivative works of, disassemble, decrypt, reverse 
+  compile or reverse engineer any part of the website's code, aesthetic 
+  interfaces, or audio tracks.
+- Remove, alter or obscure any proprietary notice (including any notice 
+  of copyright or trademark) of JDK Studios or its affiliates, partners, 
+  suppliers or the licensors of the website.
+- Reproduce or broadcast original audio files or high-resolution 
+  images without explicit written consent from the Licensor.
+
+4. FAIR USE & PROMOTIONAL SHARING
+Limited sharing of content on social media or third-party platforms is 
+permitted provided that explicit credit is given to "JDK Studios" and 
+a direct hyperlink to the original content is included. Audio tracks 
+may not be used as background music for third-party content without 
+prior licensing.
+
+5. DISCLAIMER OF WARRANTIES
+The content is provided to you "AS IS" and "AS AVAILABLE" and with all 
+faults and defects without warranty of any kind. To the maximum extent 
+permitted under applicable law, JDK Studios expressly disclaims all 
+warranties, whether express, implied, statutory or otherwise, with 
+respect to the content.
+
+6. LIMITATION OF LIABILITY
+Notwithstanding any damages that you might incur, the entire liability 
+of JDK Studios and any of its suppliers under any provision of this 
+License and your exclusive remedy for all of the foregoing shall be 
+limited to the amount actually paid by you for the content, if any.
+
+7. AMENDMENTS TO THIS AGREEMENT
+JDK Studios reserves the right, at its sole discretion, to modify or 
+replace this License at any time. 
+
+=======================================================================
+For licensing inquiries, commercial usage requests, or permissions 
+regarding specific tracks or photographs, please contact JDK Studios.
+=======================================================================

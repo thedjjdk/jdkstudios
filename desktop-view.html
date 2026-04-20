@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JDK's Desktop</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'VT323', monospace;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #000040; 
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 16 16"><rect x="4" y="10" width="4" height="3" fill="%23000066"/><rect x="7" y="3" width="1" height="7" fill="%23000066"/><rect x="8" y="3" width="3" height="1" fill="%23000066"/><rect x="10" y="4" width="1" height="2" fill="%23000066"/></svg>');
+            background-size: 64px 64px;
+            image-rendering: pixelated;
+        }
+
+        /* Desktop Container */
+        .desktop {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 40px);
+            overflow: hidden;
+        }
+
+        /* Desktop Icons */
+        .desktop-icon {
+            width: 80px;
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            cursor: pointer;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .desktop-icon img {
+            width: 32px;
+            height: 32px;
+            image-rendering: pixelated;
+            margin-bottom: 5px;
+            pointer-events: none; 
+        }
+
+        .desktop-icon span {
+            color: white;
+            font-size: 16px;
+            text-shadow: 1px 1px 0 #000;
+            padding: 2px 4px;
+            pointer-events: none;
+        }
+
+        .desktop-icon:active span, .desktop-icon.selected span {
+            background-color: #000080;
+            border: 1px dotted white;
+            text-shadow: none;
+        }
+
+        /* Taskbar */
+        .taskbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background-color: #c0c0c0;
+            border-top: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            padding: 2px;
+            z-index: 9999;
+        }
+
+        .start-btn {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0 10px;
+            font-size: 18px;
+            font-weight: bold;
+            background: #c0c0c0;
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #808080;
+            border-bottom: 2px solid #808080;
+            cursor: pointer;
+            box-shadow: inset 1px 1px #dfdfdf, inset -1px -1px #0a0a0a;
+        }
+
+        .start-btn:active {
+            border-top: 2px solid #0a0a0a;
+            border-left: 2px solid #0a0a0a;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            box-shadow: inset 1px 1px #808080, inset -1px -1px #dfdfdf;
+        }
+
+        .start-btn img {
+            width: 20px;
+            margin-right: 5px;
+            image-rendering: pixelated;
+        }
+
+        /* Search Bar (Retro) */
+        .search-container {
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding-left: 10px;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #fff;
+        }
+        
+        .search-label {
+            font-size: 16px;
+            margin-right: 5px;
+            color: #000;
+        }
+
+        .search-bar {
+            height: 24px;
+            width: 140px;
+            font-size: 16px;
+            padding: 0 5px;
+            background: #fff;
+            color: #000;
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            box-shadow: inset 1px 1px #000, inset -1px -1px #c0c0c0;
+            outline: none;
+            font-family: 'VT323', monospace;
+        }
+
+        .taskbar-divider {
+            flex-grow: 1;
+        }
+
+        .system-tray {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0 10px;
+            font-size: 18px;
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #dfdfdf;
+            background: #c0c0c0;
+            cursor: pointer;
+        }
+
+        .system-tray:active {
+            border-top: 2px solid #0a0a0a;
+            border-left: 2px solid #0a0a0a;
+            border-right: 2px solid #dfdfdf;
+            border-bottom: 2px solid #dfdfdf;
+        }
+
+        /* Calendar Pop-up */
+        .calendar-popup {
+            position: absolute;
+            bottom: 40px;
+            right: 2px;
+            width: 220px;
+            background-color: #c0c0c0;
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #808080;
+            border-bottom: 2px solid #808080;
+            display: none;
+            flex-direction: column;
+            z-index: 10001;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            padding: 10px;
+        }
+        .calendar-popup.active {
+            display: flex;
+        }
+        .cal-time {
+            font-size: 24px;
+            text-align: center;
+            border-bottom: 2px groove #fff;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+            background: black;
+            color: lime;
+            border: 2px solid #808080;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+        }
+        .cal-header {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .calendar-popup table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            background: white;
+            border: 2px solid #808080;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+        }
+        .calendar-popup th {
+            background: #000080;
+            color: white;
+            font-size: 16px;
+        }
+        .calendar-popup td {
+            border: 1px solid #c0c0c0;
+            padding: 2px;
+            font-size: 16px;
+            cursor: default;
+        }
+        .calendar-popup td.today {
+            background: #000080;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Start Menu */
+        .start-menu {
+            position: absolute;
+            bottom: 40px;
+            left: 2px;
+            width: 200px;
+            background-color: #c0c0c0;
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #808080;
+            border-bottom: 2px solid #808080;
+            display: none;
+            flex-direction: column;
+            z-index: 10000;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .start-menu.active {
+            display: flex;
+        }
+
+        .sidebar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 30px;
+            background: #000080;
+            color: white;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            text-align: right;
+            padding: 5px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .menu-items {
+            margin-left: 30px;
+            padding: 5px;
+        }
+
+        .menu-item {
+            padding: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-item:hover {
+            background-color: #000080;
+            color: white;
+        }
+
+        /* Windows Forms */
+        .window {
+            position: absolute;
+            background-color: #c0c0c0;
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #0a0a0a;
+            border-bottom: 2px solid #0a0a0a;
+            display: none; 
+            flex-direction: column;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .window-header {
+            background: #000080;
+            color: white;
+            padding: 2px 5px;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+        }
+
+        .close-btn {
+            background: #c0c0c0;
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #808080;
+            border-bottom: 2px solid #808080;
+            font-weight: bold;
+            font-family: sans-serif;
+            font-size: 12px;
+            padding: 0 4px;
+            cursor: pointer;
+            color: black;
+            margin-left: 10px;
+        }
+
+        .close-btn:active {
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+        }
+
+        .menu-bar {
+            display: flex;
+            gap: 15px;
+            padding: 2px 5px;
+            font-size: 16px;
+            border-bottom: 1px solid #808080;
+        }
+
+        .menu-bar span {
+            cursor: pointer;
+        }
+
+        .window-content {
+            padding: 2px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #c0c0c0;
+        }
+
+        /* Folder Explorer */
+        .explorer-view {
+            background: #ffffff;
+            border: 2px solid #808080;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+            flex-grow: 1;
+            display: flex;
+            padding: 10px;
+            gap: 15px;
+            align-content: flex-start;
+            flex-wrap: wrap;
+            overflow-y: auto;
+        }
+
+        .explorer-icon {
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .explorer-icon img {
+            width: 32px;
+            height: 32px;
+            image-rendering: pixelated;
+            margin-bottom: 5px;
+        }
+
+        .explorer-icon span {
+            color: black;
+            font-size: 16px;
+            padding: 2px 4px;
+            word-wrap: break-word;
+            width: 100%;
+        }
+
+        .explorer-icon.selected span {
+            background-color: #000080;
+            color: white;
+            border: 1px dotted #000080;
+        }
+
+        /* Image Viewer */
+        .image-viewer-content {
+            background: #808080;
+            border: 2px solid #808080;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .image-viewer-content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border: 1px solid #000;
+        }
+
+        /* Map */
+        .static-map-container {
+            width: 100%;
+            height: 100%;
+            background: #aadaff;
+            position: relative;
+            border: 2px solid #808080;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+            overflow: hidden;
+        }
+
+        /* Generic Centers */
+        .virus-inner, .settings-inner {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            justify-content: center;
+            background: #c0c0c0;
+        }
+
+        .virus-icon {
+            width: 48px;
+            height: 48px;
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            font-family: sans-serif;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .window-btn {
+            margin-top: 20px;
+            padding: 5px 20px;
+            font-size: 16px;
+            background: #c0c0c0;
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #808080;
+            border-bottom: 2px solid #808080;
+            cursor: pointer;
+        }
+
+        .window-btn:active {
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+        }
+        
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        input[type="color"] {
+            border: 2px solid #808080;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            background: #c0c0c0;
+        }
+
+        /* Terminal Input */
+        .term-input-wrapper {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+        
+        .term-input-wrapper span {
+            margin-right: 8px;
+        }
+
+        #termInput {
+            background: transparent;
+            color: #c0c0c0;
+            border: none;
+            outline: none;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            flex-grow: 1;
+        }
+
+        /* Game Canvas */
+        canvas {
+            background: white;
+            border-top: 2px solid #808080;
+            border-left: 2px solid #808080;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            display: block;
+        }
+        
+        /* Media Player List */
+        .media-track {
+            margin-bottom: 10px;
+            cursor: pointer;
+            border: 1px solid #0f0;
+            padding: 8px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .media-track:hover {
+            background: #0f0;
+            color: #000;
+        }
+        #selection-box {
+    position: absolute;
+    border: 1px dotted #fff; /* Classic dotted retro border */
+    background-color: rgba(0, 0, 128, 0.3); /* Translucent navy blue */
+    display: none; /* Hidden by default */
+    z-index: 9998; /* Keeps it below open windows but above the desktop */
+    pointer-events: none; /* Crucial: lets your mouse events pass through it */
+}
+
+/* Ensure your icons highlight when selected */
+.desktop-icon.selected span {
+    background-color: #000080;
+    color: white;
+    border: 1px dotted white;
+}
+
+/* 2048 Game Styles */
+.grid2048 { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 5px; 
+    background: #bbada0; 
+    padding: 5px; 
+    width: 240px; 
+    height: 240px; 
+    border-top: 2px solid #808080;
+    border-left: 2px solid #808080;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+}
+
+.cell2048 { 
+    background: #cdc1b4; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-weight: bold; 
+    color: #776e65; 
+    font-size: 24px; 
+    font-family: sans-serif;
+}
+
+    </style>
+</head>
+<body>
+
+	<div id="selection-box"></div>
+
+    <div class="desktop" id="desktopArea">
+        
+        <div class="desktop-icon" id="recycleBinIcon" onclick="selectDesktopIcon(this)" ondblclick="alert('Recycle Bin is empty.')">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3QgeD0iNiIgeT0iOCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjQiIHk9IjQiIHdpZHRoPSIyNCIgaGVpZ2h0PSI0IiBmaWxsPSIjYzBjMGMwIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjEyIiB5PSIyIiB3aWR0aD0iOCIgaGVpZ2h0PSIyIiBmaWxsPSIjYzBjMGMwIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIxMCIgeTE9IjEyIiB4Mj0iMTAiIHkyPSIyNCIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIiLz48bGluZSB4MT0iMTYiIHkxPSIxMiIgeDI9IjE2IiB5Mj0iMjQiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjIyIiB5MT0iMTIiIHkyPSIyMiIgeTI9IjI0IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==" alt="Recycle Bin">
+            <span>Recycle Bin</span>
+        </div>
+
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)" ondblclick="openWindow('aboutFolder')">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwMDBBMCIgZD0iTTAgNmgybDQtNGgxMmw0IDRoMTB2MjZIMHoiLz48cGF0aCBmaWxsPSIjMDBGRkZGIiBkPSJNMCAxMmgzMnYyMEgweiIvPjwvc3ZnPg==" alt="Folder">
+            <span>About Me</span>
+        </div>
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)" ondblclick="openWindow('myWorkFolder')">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwMDBBMCIgZD0iTTAgNmgybDQtNGgxMmw0IDRoMTB2MjZIMHoiLz48cGF0aCBmaWxsPSIjMDBGRkZGIiBkPSJNMCAxMmgzMnYyMEgweiIvPjwvc3ZnPg==" alt="Folder">
+            <span>My Work</span>
+        </div>
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwMDBBMCIgZD0iTTAgNmgybDQtNGgxMmw0IDRoMTB2MjZIMHoiLz48cGF0aCBmaWxsPSIjMDBGRkZGIiBkPSJNMCAxMmgzMnYyMEgweiIvPjwvc3ZnPg==" alt="Folder">
+            <span>Contacts</span>
+        </div>
+
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)" ondblclick="openWindow('virusWindow')">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3QgeD0iNCIgeT0iNiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjIwIiBmaWxsPSIjQzBDMEMwIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjQiIHk9IjYiIHdpZHRoPSIyNCIgaGVpZ2h0PSI2IiBmaWxsPSIjMDAwMEEwIi8+PC9zdmc+" alt="App">
+            <span>JDK.exe</span>
+        </div>
+        
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)" ondblclick="openWindow('mapsWindow')">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTQgNGgyNHYyNEg0eiIvPjxwYXRoIGZpbGw9IiM2YmMiIGQ9Ik00IDRsOCAzIDgtMyA4IDN2MjBsLTgtMy04IDMtOC0zeiIvPjxwYXRoIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIiBkPSJNMTIgN3YyME0yMCA0djIwIi8+PC9zdmc+" alt="Maps">
+            <span>Maps</span>
+        </div>
+        
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)" ondblclick="openWindow('musicPlayerWindow')">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTEwIDR2MTQuNWMtMS41LS45LTMuNS0xLjUtNi0xLjUtMi4yIDAtNCAxLjEtNCAyLjVzMS44IDIuNSA0IDIuNSA0LTEuMSA0LTIuNVY4aDE0djEwLjVjLTEuNS0uOS0zLjUtMS41LTYtMS41LTIuMiAwLTQgMS4xLTQgMi41czEuOCAyLjUgNCAyLjUgNC0xLjEgNC0yLjVWNEgxMHoiLz48L3N2Zz4=" alt="Media Player" style="width: 48px; height: 48px; margin-bottom: -11px;">
+            <span>Media Player</span>
+        </div>
+
+<!-- The Desktop Icon -->
+<div class="desktop-icon" onclick="selectDesktopIcon(this)" ondblclick="openWin2048()">
+    <!-- A simple retro tile icon -->
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjYmJhZGEwIi8+PHRleHQgeD0iMTYiIHk9IjIxIiBmaWxsPSIjZmZmIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+MjA0ODwvdGV4dD48L3N2Zz4=" alt="2048">
+    <span>2048</span>
+</div>
+
+<!-- The 2048 Window -->
+<div class="window" id="win2048" style="top: 150px; left: 400px; width: 280px;">
+    <div class="window-header">
+        <span>2048 Retro</span>
+        <button class="close-btn" onclick="closeWindow('win2048')">X</button>
+    </div>
+    <div class="menu-bar">
+        <span onclick="init2048()">Restart</span><span>Help</span>
+    </div>
+    <div class="window-content" style="text-align: center; background: #c0c0c0;">
+        <div class="grid2048" id="g2048" style="margin: 10px auto;"></div>
+        <p style="margin: 5px 0 0 0; font-size: 18px;">Use Arrow Keys to slide</p>
+    </div>
+</div>
+
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)" ondblclick="openWindow('minesweeperWindow'); initMinesweeper();">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjYzBjMGMwIiBzdHJva2U9IiM4MDgwODAiIHN0cm9rZS13aWR0aD0iMiIvPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjYiIGZpbGw9IiMwMDAiLz48cGF0aCBkPSJNMTYgNnY0TTE2IDIydjRNMTAgMTZoLTRNMjYgMTZoLTRNMTIgMTJsLTMtM00yMyAyM2wtMy0zTTEyIDIwbC0zIDNNMjMgOWwtMyAzIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==" alt="Minesweeper">
+            <span>Minesweeper</span>
+        </div>
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)" ondblclick="openGameWindow('dinoWindow')">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZD0iTTE2IDJ2MmgydjJoMnYyaC0ydjJoLTJ2LTJoLTJ2LTRoLTJWMmg0em0wIDhoLTJ2MmgtMnYyaC0ydjJoLTJ2Mkg2djJINFYyMmgydjJoMnYtMmgydi0yaDJ2LTJoMnYyaDJ2Mmgydi0yaC0ydi0yaC0ydi0yaDJ2LTJoMnYtMmgtMnYtMnoiIGZpbGw9IiM1MzUzNTMiLz48L3N2Zz4=" alt="Dino Runner">
+            <span>Dino Runner</span>
+        </div>
+
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjI4IiBoZWlnaHQ9IjI4IiBmaWxsPSIjZmZhNTAwIi8+PC9zdmc+" alt="FL Studio">
+            <span>FL Studio</span>
+        </div>
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjI4IiBoZWlnaHQ9IjI4IiBmaWxsPSIjMDAwIi8+PHBhdGggZD0iTThIMjRWMjRIIHoiIGZpbGw9IiM1NTVmZmYiLz48L3N2Zz4=" alt="Logic">
+            <span>Logic</span>
+        </div>
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjI4IiBoZWlnaHQ9IjI4IiBmaWxsPSIjODAwMDAwIi8+PC9zdmc+" alt="Pro Tools">
+            <span>Pro Tools</span>
+        </div>
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjI4IiBoZWlnaHQ9IjI4IiBmaWxsPSIjMTMzYzU1Ii8+PHRleHQgeD0iMTYiIHk9IjIwIiBmaWxsPSIjZmZmIiBmb250LXNpemU9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+THI8L3RleHQ+PC9zdmc+" alt="Lightroom">
+            <span>Adobe Lightroom</span>
+        </div>
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjI4IiBoZWlnaHQ9IjI4IiBmaWxsPSIjMDAwIi8+PGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOCIgZmlsbD0iI2FhYSIvPjwvc3ZnPg==" alt="Final Cut Pro">
+            <span>Final Cut Pro</span>
+        </div>
+        <div class="desktop-icon" onclick="selectDesktopIcon(this)">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBvbHlnb24gcG9pbnRzPSI0LDYgMjgsNiAxNiwyOCIgZmlsbD0iI2ZmOGMwMCIvPjwvc3ZnPg==" alt="Hitfilm">
+            <span>Hitfilm</span>
+        </div>
+    </div>
+
+    <!-- START MENU WINDOWS -->
+
+    <!-- WINDOW: Search Results -->
+    <div class="window" id="searchResultsFolder" style="top: 15%; left: 30%; width: 550px; height: 400px;">
+        <div class="window-header">
+            <span>Search Results</span>
+            <button class="close-btn" onclick="closeWindow('searchResultsFolder')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+        <div class="window-content">
+            <div class="explorer-view" id="searchResultsContainer">
+                <!-- Injected via search -->
+            </div>
+        </div>
+    </div>
+
+    <!-- WINDOW: Programs -->
+    <div class="window" id="programsFolder" style="top: 20%; left: 20%; width: 500px; height: 350px;">
+        <div class="window-header">
+            <span>C:\WINDOWS\Start Menu\Programs</span>
+            <button class="close-btn" onclick="closeWindow('programsFolder')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+        <div class="window-content">
+            <div class="explorer-view" id="programsContainer">
+                <!-- Populated automatically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- WINDOW: Documents -->
+    <div class="window" id="documentsFolder" style="top: 25%; left: 25%; width: 600px; height: 400px;">
+        <div class="window-header">
+            <span>C:\WINDOWS\Start Menu\Documents</span>
+            <button class="close-btn" onclick="closeWindow('documentsFolder')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+        <div class="window-content">
+            <div class="explorer-view" id="documentsContainer">
+                <!-- Populated automatically -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- NEW: Terminal Window -->
+    <div class="window" id="terminalWindow" style="top: 20%; left: 20%; width: 550px; height: 380px;">
+        <div class="window-header">
+            <span>C:\WINDOWS\system32\cmd.exe</span>
+            <button class="close-btn" onclick="closeWindow('terminalWindow')">X</button>
+        </div>
+        <div class="window-content" style="background: #000; color: #c0c0c0; font-family: 'Courier New', monospace; padding: 10px; overflow-y: auto;" id="terminalOutput" onclick="document.getElementById('termInput').focus()">
+            <div>Microsoft(R) Windows 95</div>
+            <div>(C)Copyright Microsoft Corp 1981-1996.</div>
+            <br>
+            <div id="termHistory"></div>
+            <div class="term-input-wrapper">
+                <span>C:\WINDOWS></span>
+                <input type="text" id="termInput" onkeypress="handleTerminal(event)" autocomplete="off" spellcheck="false">
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Media Player -->
+    <div class="window" id="musicPlayerWindow" style="top: 15%; left: 35%; width: 450px; height: auto;">
+        <div class="window-header">
+            <span>Media Player</span>
+            <button class="close-btn" onclick="closeWindow('musicPlayerWindow')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>Device</span><span>Help</span>
+        </div>
+        <div class="window-content" style="background: #000; color: #0f0; font-family: 'VT323', monospace; padding: 15px;">
+            <h2 style="margin: 0 0 10px 0; border-bottom: 2px solid #0f0; text-align: center; font-size: 24px;">Now Playing</h2>
+            <ul style="list-style: none; padding: 0; margin: 0; font-size: 20px;">
+                <li class="media-track" onclick="window.open('https://open.spotify.com/album/4yp8r1r7iyx356zQ151LpM?si=KJwH9KpbQzq64yFOZ7szUQ', '_blank')">▶ Modern Day Cowboy - Taulia Lave</li>
+                <li class="media-track" onclick="window.open('https://open.spotify.com/album/4pJQvqFyhNYBMPTqnHlBO9?si=muFPXP0-Rpa4IcKuIrkS2A', '_blank')">▶ heaven can wait - Ace Turk</li>
+                <li class="media-track" onclick="window.open('https://open.spotify.com/track/38q1Nv5nozqxoqSm0AXoC3?si=3d3b398d350b42d9', '_blank')">▶ Everything I Look For - Somethin' Trippy</li>
+                <li class="media-track" onclick="window.open('https://open.spotify.com/album/13z2hIceJriU1gV4cxzZIi?si=HcMRL85-TnaePJCdqx0nzA', '_blank')">▶ WHO I'VE BECOME - DJ JDK</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- EXISTING FOLDERS & APPS -->
+
+    <div class="window" id="aboutFolder" style="top: 10%; left: 15%; width: 450px; height: 300px;">
+        <div class="window-header">
+            <span>C:\WINDOWS\Desktop\About Me</span>
+            <button class="close-btn" onclick="closeWindow('aboutFolder')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+        <div class="window-content">
+            <div class="explorer-view">
+                <div class="explorer-icon doc-item" onclick="selectExplorerIcon(this)" ondblclick="openWindow('notepadWindow')">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTQgNGgyMHYyNEg0eiIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBkPSJNNCA0aDIwdjI0SDR6Ii8+PHBhdGggc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIiIGQ9Ik04IDEwaDEydjJIOHptMCA2aDEydjJIOHptMCA2aDEwdjJIOHoiLz48L3N2Zz4=" alt="Text File">
+                    <span>bio.txt</span>
+                </div>
+                <div class="explorer-icon doc-item" onclick="selectExplorerIcon(this)" ondblclick="openDynamicImage('me.jpg', 'photo.jpg')">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTQgNGgyNHYyNEg0eiIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBkPSJNNCA0aDI0djI0SDR6Ii8+PHBhdGggZmlsbD0iIzA5MCIgZD0iTTQgMjBsaC00IDgtOHYxMkg0eiIvPjxwYXRoIGZpbGw9IiMwMDkiIGQ9Ik0xNiAyNGw4LTEwIDQgMTBoLTEyeiIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMTAiIHI9IjMiIGZpbGw9IiNmZjAiLz48L3N2Zz4=" alt="Image File">
+                    <span>photo.jpg</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="window" id="myWorkFolder" style="top: 15%; left: 20%; width: 500px; height: 350px;">
+        <div class="window-header">
+            <span>C:\WINDOWS\Desktop\My Work</span>
+            <button class="close-btn" onclick="closeWindow('myWorkFolder')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+        <div class="window-content">
+            <div class="explorer-view">
+                <div class="explorer-icon folder-item" onclick="selectExplorerIcon(this)" ondblclick="openWindow('liveSoundFolder')">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwMDBBMCIgZD0iTTAgNmgybDQtNGgxMmw0IDRoMTB2MjZIMHoiLz48cGF0aCBmaWxsPSIjMDBGRkZGIiBkPSJNMCAxMmgzMnYyMEgweiIvPjwvc3ZnPg==" alt="Folder">
+                    <span>Live Sound</span>
+                </div>
+                <div class="explorer-icon folder-item" onclick="selectExplorerIcon(this)" ondblclick="openWindow('studioFolder')">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwMDBBMCIgZD0iTTAgNmgybDQtNGgxMmw0IDRoMTB2MjZIMHoiLz48cGF0aCBmaWxsPSIjMDBGRkZGIiBkPSJNMCAxMmgzMnYyMEgweiIvPjwvc3ZnPg==" alt="Folder">
+                    <span>Studio</span>
+                </div>
+                <div class="explorer-icon folder-item" onclick="selectExplorerIcon(this)" ondblclick="openWindow('photographyFolder')">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwMDBBMCIgZD0iTTAgNmgybDQtNGgxMmw0IDRoMTB2MjZIMHoiLz48cGF0aCBmaWxsPSIjMDBGRkZGIiBkPSJNMCAxMmgzMnYyMEgweiIvPjwvc3ZnPg==" alt="Folder">
+                    <span>Photography</span>
+                </div>
+                <div class="explorer-icon folder-item" onclick="selectExplorerIcon(this)" ondblclick="openWindow('thumbnailsFolder')">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwMDBBMCIgZD0iTTAgNmgybDQtNGgxMmw0IDRoMTB2MjZIMHoiLz48cGF0aCBmaWxsPSIjMDBGRkZGIiBkPSJNMCAxMmgzMnYyMEgweiIvPjwvc3ZnPg==" alt="Folder">
+                    <span>Thumbnails</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="window" id="liveSoundFolder" style="top: 22%; left: 22%; width: 600px; height: 400px;">
+        <div class="window-header">
+            <span>C:\WINDOWS\Desktop\My Work\Live Sound</span>
+            <button class="close-btn" onclick="closeWindow('liveSoundFolder')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+        <div class="window-content">
+            <div class="explorer-view"></div>
+        </div>
+    </div>
+
+    <div class="window" id="studioFolder" style="top: 20%; left: 25%; width: 500px; height: 350px;">
+        <div class="window-header">
+            <span>C:\WINDOWS\Desktop\My Work\Studio</span>
+            <button class="close-btn" onclick="closeWindow('studioFolder')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+        <div class="window-content">
+            <div class="explorer-view"></div>
+        </div>
+    </div>
+    
+    <div class="window" id="photographyFolder" style="top: 25%; left: 30%; width: 500px; height: 350px;">
+        <div class="window-header">
+            <span>C:\WINDOWS\Desktop\My Work\Photography</span>
+            <button class="close-btn" onclick="closeWindow('photographyFolder')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+        <div class="window-content">
+            <div class="explorer-view">
+                <div class="explorer-icon folder-item" onclick="selectExplorerIcon(this)" ondblclick="openWindow('bTrainFolder')">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iIzAwMDBBMCIgZD0iTTAgNmgybDQtNGgxMmw0IDRoMTB2MjZIMHoiLz48cGF0aCBmaWxsPSIjMDBGRkZGIiBkPSJNMCAxMmgzMnYyMEgweiIvPjwvc3ZnPg==" alt="Folder">
+                    <span>B Train Foamer</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="window" id="bTrainFolder" style="top: 28%; left: 32%; width: 450px; height: 300px;">
+        <div class="window-header">
+            <span>C:\WINDOWS\Desktop\My Work\Photography\B Train Foamer</span>
+            <button class="close-btn" onclick="closeWindow('bTrainFolder')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+        <div class="window-content">
+            <div class="explorer-view"></div>
+        </div>
+    </div>
+
+    <div class="window" id="thumbnailsFolder" style="top: 30%; left: 35%; width: 600px; height: 400px;">
+        <div class="window-header">
+            <span>C:\WINDOWS\Desktop\My Work\Thumbnails</span>
+            <button class="close-btn" onclick="closeWindow('thumbnailsFolder')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+        <div class="window-content">
+            <div class="explorer-view"></div>
+        </div>
+    </div>
+
+    <div class="window" id="mapsWindow" style="top: 5%; left: 35%; width: 500px; height: 400px;">
+        <div class="window-header">
+            <span>Maps - Eastern USA</span>
+            <button class="close-btn" onclick="closeWindow('mapsWindow')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>View</span><span>Search</span><span>Help</span>
+        </div>
+        <div class="window-content" style="padding: 0;">
+            <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?q=Nashville,+TN&hl=en&z=6&output=embed" style="border: none; pointer-events: auto;"></iframe>
+        </div>
+    </div>
+    
+    <div class="window" id="minesweeperWindow" style="top: 15%; left: 40%; width: auto;">
+        <div class="window-header">
+            <span>Minesweeper</span>
+            <button class="close-btn" onclick="closeWindow('minesweeperWindow')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span onclick="initMinesweeper()">Game</span><span>Help</span>
+        </div>
+        <div class="window-content" style="background: #c0c0c0; padding: 10px; display: flex; flex-direction: column; align-items: center;">
+            <div id="ms-header" style="display: flex; justify-content: space-between; width: 100%; border-top: 2px solid #808080; border-left: 2px solid #808080; border-right: 2px solid #fff; border-bottom: 2px solid #fff; padding: 5px; margin-bottom: 10px; background: #c0c0c0;">
+                <div id="ms-mines" style="background: black; color: red; font-family: 'Courier New', monospace; font-size: 24px; padding: 2px 5px;">010</div>
+                <button id="ms-face" style="font-size: 20px; width: 36px; height: 36px; padding: 0; cursor: pointer; border-top: 2px solid #fff; border-left: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080;" onclick="initMinesweeper()">🙂</button>
+                <div id="ms-time" style="background: black; color: red; font-family: 'Courier New', monospace; font-size: 24px; padding: 2px 5px;">000</div>
+            </div>
+            <div id="ms-grid" style="display: grid; border-top: 2px solid #808080; border-left: 2px solid #808080; border-right: 2px solid #fff; border-bottom: 2px solid #fff; background: #c0c0c0;"></div>
+        </div>
+    </div>
+
+    <div class="window" id="dinoWindow" style="top: 15%; left: 25%; width: 420px;">
+        <div class="window-header">
+            <span>Dino Runner</span>
+            <button class="close-btn" onclick="closeGameWindow('dinoWindow')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span onclick="initDinoGame()">Restart</span><span>Help</span>
+        </div>
+        <div class="window-content" style="padding: 10px;">
+            <canvas id="dinoCanvas" width="400" height="150" style="cursor: pointer;"></canvas>
+            <p style="text-align: center; margin: 5px 0 0 0;">Click game screen or press Space to jump</p>
+        </div>
+    </div>
+
+    <div class="window" id="notepadWindow" style="top: 25%; left: 30%; width: 400px; height: 250px;">
+        <div class="window-header">
+            <span>bio.txt - Notepad</span>
+            <button class="close-btn" onclick="closeWindow('notepadWindow')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>Search</span><span>Help</span>
+        </div>
+        <div class="window-content">
+            <div class="notepad-textarea">
+* Started in 4th grade percussion
+* Passion found in 7th grade
+* Started in rap field, but also went into rock and country
+* Does live sound, photography, graphic design, etc.
+            </div>
+        </div>
+    </div>
+
+    <div class="window" id="dynamicImageWindow" style="top: 15%; left: 45%; width: 550px; height: 450px;">
+        <div class="window-header">
+            <span id="dynamicImageTitle">Image Viewer</span>
+            <button class="close-btn" onclick="closeWindow('dynamicImageWindow')">X</button>
+        </div>
+        <div class="window-content">
+            <div class="image-viewer-content">
+                <img id="dynamicImageSrc" src="" alt="Viewed Image">
+            </div>
+        </div>
+    </div>
+
+    <div class="window" id="virusWindow" style="top: 50%; left: 50%; transform: translate(-50%, -50%); width: 350px;">
+        <div class="window-header">
+            <span>C:\WINDOWS\JDK.exe</span>
+            <button class="close-btn" onclick="closeWindow('virusWindow')">X</button>
+        </div>
+        <div class="window-content virus-inner">
+            <div class="virus-icon">X</div>
+            <p style="font-size: 20px; margin: 0;">FATAL ERROR</p>
+            <p style="font-size: 16px; margin-top: 10px;">System integrity compromised.<br>Unidentified executable has corrupted the mainframe.</p>
+            <button class="window-btn" onclick="closeWindow('virusWindow')">OK</button>
+        </div>
+    </div>
+
+    <div class="window" id="helpWindow" style="top: 40%; left: 40%; width: 300px;">
+        <div class="window-header">
+            <span>Help</span>
+            <button class="close-btn" onclick="closeWindow('helpWindow')">X</button>
+        </div>
+        <div class="window-content virus-inner">
+            <p style="font-size: 18px; margin: 10px 0; text-align: center;">Press Shut Down to return home, otherwise I don't know how to help you 🤷</p>
+            <button class="window-btn" onclick="closeWindow('helpWindow')">Ok?</button>
+        </div>
+    </div>
+
+    <div class="window" id="settingsWindow" style="top: 25%; left: 35%; width: 350px; height: 250px;">
+        <div class="window-header">
+            <span>Control Panel</span>
+            <button class="close-btn" onclick="closeWindow('settingsWindow')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span>File</span><span>Edit</span><span>View</span><span>Help</span>
+        </div>
+        <div class="window-content settings-inner" style="background: white; align-items: flex-start; justify-content: flex-start; overflow-y: auto;">
+            <h3 style="margin: 0 0 15px 0; width: 100%; border-bottom: 1px solid #808080; padding-bottom: 5px; text-align: left;">Display Properties</h3>
+            
+            <div class="settings-row">
+                <input type="color" id="bgColorPicker" value="#000040">
+                <span style="font-weight: bold; font-size: 18px;">Background Color</span>
+            </div>
+
+            <div class="settings-row">
+                <input type="color" id="noteColorPicker" value="#000066">
+                <span style="font-weight: bold; font-size: 18px;">Note Pattern Color</span>
+            </div>
+            
+            <p style="margin-top: 10px; font-size: 14px; color: #555;">Click the squares to open your system's native color picker and set precise Hex or RGB values.</p>
+        </div>
+    </div>
+
+    <div class="calendar-popup" id="calendarPopup">
+        <div class="cal-time" id="calTimeDisplay">12:00:00 PM</div>
+        <div class="cal-header" id="calMonthYear">April 2026</div>
+        <table>
+            <tbody id="calBody">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="start-menu" id="startMenu">
+        <div class="sidebar">JDK's Desktop</div>
+        <div class="menu-items">
+            <div class="menu-item" onclick="openWindow('programsFolder'); startMenu.classList.remove('active');">Programs</div>
+            <div class="menu-item" onclick="openWindow('documentsFolder'); startMenu.classList.remove('active');">Documents</div>
+            <div class="menu-item" onclick="openWindow('settingsWindow'); startMenu.classList.remove('active');">Settings</div>
+            <div class="menu-item" onclick="openHelpWindow()">Help</div>
+            <div class="menu-item" onclick="openWindow('terminalWindow'); startMenu.classList.remove('active');">Terminal</div>
+            <hr style="border-top: 1px solid #808080; border-bottom: 1px solid #fff; border-left: none; border-right: none;">
+            <div class="menu-item" onclick="shutDown()">Shut Down...</div>
+        </div>
+    </div>
+
+    <div class="taskbar">
+        <div class="start-btn" onclick="toggleStartMenu(event)">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZD0iTTAgMGgxNHYxNEgweiIgZmlsbD0iI2YwNCIvPjxwYXRoIGQ9Ik0xOCAwSDE0djE0aDE4eiIgZmlsbD0iIzA5MCIvPjxwYXRoIGQ9Ik0wIDE4aDE0djE0SDB6IiBmaWxsPSIjMDlmIi8+PHBhdGggZD0iTTE4IDE4SDE0djE0aDE4eiIgZmlsbD0iI2ZjMCIvPjwvc3ZnPg==" alt="Windows Logo"> Start
+        </div>
+        <div class="search-container">
+            <span class="search-label">Search:</span>
+            <input type="text" id="taskbarSearch" class="search-bar" onkeypress="handleSearch(event)">
+        </div>
+        <div class="taskbar-divider"></div>
+        <div class="system-tray" id="sysTray" onclick="toggleCalendar(event)">
+            12:00 PM
+        </div>
+    </div>
+
+    <script>
+        // --- Populate Global Files Dynamically ---
+        const imgIconSvg = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTQgNGgyNHYyNEg0eiIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBkPSJNNCA0aDI0djI0SDR6Ii8+PHBhdGggZmlsbD0iIzA5MCIgZD0iTTQgMjBsaC00IDgtOHYxMkg0eiIvPjxwYXRoIGZpbGw9IiMwMDkiIGQ9Ik0xNiAyNGw4LTEwIDQgMTBoLTEyeiIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMTAiIHI9IjMiIGZpbGw9IiNmZjAiLz48L3N2Zz4=`;
+        
+        function injectFiles(containerId, fileArray) {
+            const container = document.querySelector(`#${containerId} .explorer-view`);
+            if(!container) return;
+            fileArray.forEach(file => {
+                let div = document.createElement('div');
+                div.className = 'explorer-icon doc-item';
+                div.onclick = function() { selectExplorerIcon(this); };
+                div.ondblclick = function() { openDynamicImage(file, file); };
+                
+                let img = document.createElement('img');
+                img.src = imgIconSvg;
+                
+                let span = document.createElement('span');
+                span.innerText = file.length > 15 ? file.substring(0,10) + '...jpg' : file;
+                
+                div.appendChild(img);
+                div.appendChild(span);
+                container.appendChild(div);
+            });
+        }
+
+        const liveSoundFiles = ['IMG_4612.jpg', 'IMG_4614.jpg', 'IMG_4618.jpg', 'IMG_4620.jpg', 'IMG_4623.jpg', 'IMG_4644.jpg', 'IMG_4646.jpg', 'IMG_4647.jpg', 'IMG_4649.jpg', 'IMG_4652.jpg'];
+        const studioFiles = ['ace_turk.jpg', 'cowboy.jpg', 'trippy.jpg', 'question.jpg', 'glitch.jpg'];
+        const thumbnailFiles = ['41__Unmei.jpg', '42__Bloodbath_Thumbnail_w__ExIcon.jpg', '43__Auditory_Update.jpg', '44__The_Flawless.jpg', '45__XO.jpg', '46__The_End_Is_Here.jpg', '47__Black_Blizzard.jpg', 'OFFLINE.jpg'];
+        const photoFiles = ['PXL_20251119_050858109_4.jpg'];
+
+        injectFiles('liveSoundFolder', liveSoundFiles);
+        injectFiles('studioFolder', studioFiles);
+        injectFiles('thumbnailsFolder', thumbnailFiles);
+        injectFiles('photographyFolder', photoFiles);
+
+        function populateAggregators() {
+            const progsContainer = document.getElementById('programsContainer');
+            const docsContainer = document.getElementById('documentsContainer');
+            
+            document.querySelectorAll('.desktop > .desktop-icon').forEach(icon => {
+                let text = icon.querySelector('span').innerText;
+                // Exclude folders and Recycle Bin from Programs
+                if(!['About Me', 'My Work', 'Contacts', 'Recycle Bin'].includes(text)) {
+                    let clone = icon.cloneNode(true);
+                    clone.className = 'explorer-icon';
+                    clone.onclick = function() { selectExplorerIcon(this); };
+                    clone.ondblclick = icon.ondblclick;
+                    progsContainer.appendChild(clone);
+                }
+            });
+
+            document.querySelectorAll('.doc-item').forEach(item => {
+                let clone = item.cloneNode(true);
+                clone.className = 'explorer-icon';
+                clone.onclick = function() { selectExplorerIcon(this); };
+                clone.ondblclick = item.ondblclick;
+                docsContainer.appendChild(clone);
+            });
+        }
+        
+        // --- Taskbar Search Logic ---
+        function handleSearch(e) {
+            if (e.key === 'Enter') {
+                const query = document.getElementById('taskbarSearch').value.toLowerCase().trim();
+                const container = document.getElementById('searchResultsContainer');
+                container.innerHTML = ''; 
+
+                if (query) {
+                    const allIcons = document.querySelectorAll('.desktop-icon, .explorer-icon');
+                    const seen = new Set();
+
+                    allIcons.forEach(icon => {
+                        const name = icon.querySelector('span').innerText.toLowerCase();
+                        if (name.includes(query) && !seen.has(name)) {
+                            seen.add(name);
+                            let clone = icon.cloneNode(true);
+                            clone.className = 'explorer-icon';
+                            clone.onclick = function() { selectExplorerIcon(this); };
+                            clone.ondblclick = icon.ondblclick;
+                            container.appendChild(clone);
+                        }
+                    });
+                }
+                
+                openWindow('searchResultsFolder');
+                document.getElementById('taskbarSearch').value = ''; 
+            }
+        }
+        
+        // --- Terminal Logic ---
+        function handleTerminal(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('termInput');
+                const history = document.getElementById('termHistory');
+                const cmd = input.value.trim();
+                
+                history.innerHTML += `<div>C:\\WINDOWS>${cmd}</div>`;
+                
+                if (cmd.toLowerCase() === 'help') {
+                    history.innerHTML += `<div>Available commands: help, clear, date, echo</div>`;
+                } else if (cmd.toLowerCase() === 'clear') {
+                    history.innerHTML = '';
+                } else if (cmd.toLowerCase().startsWith('echo ')) {
+                    history.innerHTML += `<div>${cmd.substring(5)}</div>`;
+                } else if (cmd.toLowerCase() === 'date') {
+                    history.innerHTML += `<div>${new Date().toString()}</div>`;
+                } else if (cmd !== '') {
+                    history.innerHTML += `<div>Bad command or file name</div>`;
+                }
+                
+                input.value = '';
+                const output = document.getElementById('terminalOutput');
+                output.scrollTop = output.scrollHeight;
+            }
+        }
+
+        // --- Time & Calendar Logic ---
+        function updateTray() {
+            const tray = document.getElementById('sysTray');
+            const calTime = document.getElementById('calTimeDisplay');
+            const now = new Date();
+            
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+            
+            tray.innerHTML = `${hours}:${minutes} ${ampm}`;
+            calTime.innerHTML = `${hours}:${minutes}:${seconds} ${ampm}`;
+        }
+        setInterval(updateTray, 1000);
+        updateTray(); 
+
+        const calendarPopup = document.getElementById('calendarPopup');
+        function toggleCalendar(e) {
+            e.stopPropagation();
+            calendarPopup.classList.toggle('active');
+            if (calendarPopup.classList.contains('active')) buildCalendar();
+        }
+
+        function buildCalendar() {
+            const calBody = document.getElementById('calBody');
+            const calMonthYear = document.getElementById('calMonthYear');
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            calMonthYear.innerText = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            let html = '<tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr><tr>';
+            let dayOfWeek = 0;
+
+            for(let i=0; i<firstDay; i++) {
+                html += '<td></td>';
+                dayOfWeek++;
+            }
+
+            for(let day=1; day<=daysInMonth; day++) {
+                if(dayOfWeek === 7) {
+                    html += '</tr><tr>';
+                    dayOfWeek = 0;
+                }
+                let isToday = (day === now.getDate()) ? 'class="today"' : '';
+                html += `<td ${isToday}>${day}</td>`;
+                dayOfWeek++;
+            }
+
+            while(dayOfWeek < 7) {
+                html += '<td></td>';
+                dayOfWeek++;
+            }
+            html += '</tr>';
+            calBody.innerHTML = html;
+        }
+
+        // Start Menu Handling
+        const startMenu = document.getElementById('startMenu');
+        function toggleStartMenu(e) {
+            e.stopPropagation();
+            startMenu.classList.toggle('active');
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.closest('.start-menu') && !event.target.closest('.start-btn')) {
+                startMenu.classList.remove('active');
+            }
+            if (!event.target.closest('.calendar-popup') && !event.target.closest('.system-tray')) {
+                calendarPopup.classList.remove('active');
+            }
+        }
+
+        // --- Color Picker Settings Logic ---
+        document.getElementById('bgColorPicker').addEventListener('input', function(e) {
+            document.body.style.backgroundColor = e.target.value;
+        });
+
+        document.getElementById('noteColorPicker').addEventListener('input', function(e) {
+            let encodedColor = e.target.value.replace('#', '%23');
+            document.body.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 16 16"><rect x="4" y="10" width="4" height="3" fill="${encodedColor}"/><rect x="7" y="3" width="1" height="7" fill="${encodedColor}"/><rect x="8" y="3" width="3" height="1" fill="${encodedColor}"/><rect x="10" y="4" width="1" height="2" fill="${encodedColor}"/></svg>')`;
+        });
+
+        // --- Selection Handlers ---
+        function selectDesktopIcon(element) {
+            document.querySelectorAll('.desktop > .desktop-icon').forEach(icon => icon.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function selectExplorerIcon(element) {
+            const parent = element.closest('.explorer-view');
+            parent.querySelectorAll('.explorer-icon').forEach(icon => icon.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function openDynamicImage(filename, title) {
+            const imgElement = document.getElementById('dynamicImageSrc');
+            const titleElement = document.getElementById('dynamicImageTitle');
+            imgElement.src = filename;
+            titleElement.innerText = title + ' - Image Viewer';
+            openWindow('dynamicImageWindow');
+        }
+
+        function openHelpWindow() {
+            openWindow('helpWindow');
+            startMenu.classList.remove('active');
+        }
+
+        // --- Window Management ---
+        let zIndexCounter = 2000;
+
+        function openWindow(id) {
+            const win = document.getElementById(id);
+            if(!win) return;
+            win.style.display = 'flex';
+            win.style.zIndex = ++zIndexCounter;
+            document.querySelectorAll('.desktop > .desktop-icon').forEach(icon => icon.classList.remove('selected'));
+        }
+
+        function closeWindow(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        document.querySelectorAll('.window').forEach(win => {
+            win.addEventListener('mousedown', () => {
+                win.style.zIndex = ++zIndexCounter;
+            });
+        });
+
+        function shutDown() {
+            window.location.href = "main.html";
+        }
+
+        // --- Draggable Windows Logic ---
+        document.querySelectorAll('.window-header').forEach(header => {
+            header.onmousedown = dragMouseDown;
+            const win = header.parentElement;
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            function dragMouseDown(e) {
+                if(e.target.closest('.close-btn')) return;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+                win.style.zIndex = ++zIndexCounter;
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                if (win.style.transform.includes('translate')) {
+                    win.style.transform = 'none';
+                }
+
+                let newTop = win.offsetTop - pos2;
+                let newLeft = win.offsetLeft - pos1;
+
+                if (newTop < 0) newTop = 0;
+                
+                win.style.top = newTop + "px";
+                win.style.left = newLeft + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        });
+
+        // --- Initialize and Snap-Drag Desktop Icons (ANTI-OVERLAP & RECYCLE BIN) ---
+        function initDesktopIcons() {
+            const icons = document.querySelectorAll('.desktop > .desktop-icon');
+            let startX = 10;
+            let startY = 10;
+            const gridX = 95;
+            const gridY = 90; 
+            const offsetX = 10;
+            const offsetY = 10;
+            
+            icons.forEach(icon => {
+                const maxH = window.innerHeight - 40; 
+                icon.style.position = 'absolute';
+                icon.style.left = startX + 'px';
+                icon.style.top = startY + 'px';
+                
+                startY += gridY;
+                if (startY + gridY > maxH) {
+                    startY = 10;
+                    startX += gridX;
+                }
+
+                icon.onmousedown = function(e) {
+                    let pos1 = 0, pos2 = 0, pos3 = e.clientX, pos4 = e.clientY;
+                    let originalLeft = parseInt(icon.style.left, 10);
+                    let originalTop = parseInt(icon.style.top, 10);
+                    
+                    document.onmouseup = function(upEvent) {
+                        document.onmouseup = null;
+                        document.onmousemove = null;
+                        
+                        // Check Recycle Bin Drop
+                        let bin = document.getElementById('recycleBinIcon');
+                        if (bin && icon !== bin) {
+                            let binRect = bin.getBoundingClientRect();
+                            if (upEvent.clientX >= binRect.left && upEvent.clientX <= binRect.right &&
+                                upEvent.clientY >= binRect.top && upEvent.clientY <= binRect.bottom) {
+                                
+                                let itemName = icon.querySelector('span').innerText;
+                                if(confirm("Are you sure you want to send '" + itemName + "' to the Recycle Bin?")) {
+                                    icon.remove(); 
+                                    return; 
+                                }
+                            }
+                        }
+
+                        let currentLeft = parseInt(icon.style.left, 10) || 0;
+                        let currentTop = parseInt(icon.style.top, 10) || 0;
+                        
+                        let snappedLeft = Math.round((currentLeft - offsetX) / gridX) * gridX + offsetX;
+                        let snappedTop = Math.round((currentTop - offsetY) / gridY) * gridY + offsetY;
+
+                        const maxTop = window.innerHeight - 40 - icon.offsetHeight;
+                        const maxLeft = window.innerWidth - icon.offsetWidth;
+
+                        if(snappedTop < 0) snappedTop = offsetY;
+                        if(snappedTop > maxTop) snappedTop = Math.max(0, Math.floor(maxTop/gridY)*gridY + offsetY);
+                        if(snappedLeft < 0) snappedLeft = offsetX;
+                        if(snappedLeft > maxLeft) snappedLeft = Math.max(0, Math.floor(maxLeft/gridX)*gridX + offsetX);
+
+                        // Overlap Check
+                        let isOccupied = false;
+                        document.querySelectorAll('.desktop > .desktop-icon').forEach(otherIcon => {
+                            if (otherIcon !== icon) {
+                                let otherL = parseInt(otherIcon.style.left, 10);
+                                let otherT = parseInt(otherIcon.style.top, 10);
+                                if (Math.abs(otherL - snappedLeft) < 40 && Math.abs(otherT - snappedTop) < 40) {
+                                    isOccupied = true;
+                                }
+                            }
+                        });
+
+                        if (isOccupied) {
+                            snappedLeft = originalLeft;
+                            snappedTop = originalTop;
+                        }
+
+                        icon.style.top = snappedTop + "px";
+                        icon.style.left = snappedLeft + "px";
+                    };
+
+                    document.onmousemove = function(e) {
+                        e.preventDefault();
+                        pos1 = pos3 - e.clientX;
+                        pos2 = pos4 - e.clientY;
+                        pos3 = e.clientX;
+                        pos4 = e.clientY;
+
+                        icon.style.top = (icon.offsetTop - pos2) + "px";
+                        icon.style.left = (icon.offsetLeft - pos1) + "px";
+                    };
+                };
+            });
+        }
+        
+        // --- Hard Responsive Clamp ---
+        function clampElements() {
+            const winH = window.innerHeight;
+            const winW = window.innerWidth;
+            const gridX = 95;
+            const gridY = 90;
+            const offsetX = 10;
+            const offsetY = 10;
+
+            document.querySelectorAll('.desktop > .desktop-icon').forEach(icon => {
+                let maxTop = winH - 40 - icon.offsetHeight;
+                let maxLeft = winW - icon.offsetWidth;
+                
+                let currentTop = parseInt(icon.style.top) || 0;
+                let currentLeft = parseInt(icon.style.left) || 0;
+
+                if (currentTop > maxTop) {
+                    icon.style.top = Math.max(0, Math.floor(maxTop/gridY)*gridY + offsetY) + 'px';
+                }
+                if (currentLeft > maxLeft) {
+                    icon.style.left = Math.max(0, Math.floor(maxLeft/gridX)*gridX + offsetX) + 'px';
+                }
+            });
+
+            document.querySelectorAll('.window').forEach(win => {
+                if (win.style.display !== 'none') {
+                    if (win.offsetTop + 30 > winH - 40) {
+                        win.style.top = Math.max(0, winH - 70) + 'px';
+                    }
+                    if (win.offsetLeft > winW - 50) {
+                        win.style.left = Math.max(0, winW - parseInt(win.style.width || 300)) + 'px';
+                    }
+                }
+            });
+        }
+
+        window.addEventListener('resize', clampElements);
+        
+        window.onload = function() {
+            populateAggregators();
+            initDesktopIcons();
+        }
+
+        // --- MINESWEEPER LOGIC ---
+        let msGrid = [];
+        let msRows = 9;
+        let msCols = 9;
+        let msMines = 10;
+        let msFlags = 0;
+        let msGameOver = false;
+
+        function initMinesweeper() {
+            const gridEl = document.getElementById('ms-grid');
+            gridEl.style.gridTemplateColumns = `repeat(${msCols}, 25px)`;
+            gridEl.innerHTML = '';
+            msGrid = [];
+            msGameOver = false;
+            msFlags = 0;
+            document.getElementById('ms-face').innerText = '🙂';
+            document.getElementById('ms-mines').innerText = msMines.toString().padStart(3, '0');
+
+            for (let r = 0; r < msRows; r++) {
+                let row = [];
+                for (let c = 0; c < msCols; c++) {
+                    let cell = document.createElement('div');
+                    cell.style.width = '25px';
+                    cell.style.height = '25px';
+                    cell.style.backgroundColor = '#c0c0c0';
+                    cell.style.borderTop = '2px solid #fff';
+                    cell.style.borderLeft = '2px solid #fff';
+                    cell.style.borderBottom = '2px solid #808080';
+                    cell.style.borderRight = '2px solid #808080';
+                    cell.style.display = 'flex';
+                    cell.style.justifyContent = 'center';
+                    cell.style.alignItems = 'center';
+                    cell.style.fontWeight = 'bold';
+                    cell.style.fontFamily = 'sans-serif';
+                    cell.style.fontSize = '14px';
+                    cell.style.cursor = 'pointer';
+                    
+                    cell.oncontextmenu = (e) => { e.preventDefault(); flagMsCell(r, c); };
+                    cell.onclick = () => revealMsCell(r, c);
+                    
+                    gridEl.appendChild(cell);
+                    row.push({ el: cell, mine: false, revealed: false, flagged: false, count: 0 });
+                }
+                msGrid.push(row);
+            }
+
+            let placed = 0;
+            while (placed < msMines) {
+                let r = Math.floor(Math.random() * msRows);
+                let c = Math.floor(Math.random() * msCols);
+                if (!msGrid[r][c].mine) {
+                    msGrid[r][c].mine = true;
+                    placed++;
+                }
+            }
+
+            for (let r = 0; r < msRows; r++) {
+                for (let c = 0; c < msCols; c++) {
+                    if (!msGrid[r][c].mine) {
+                        let count = 0;
+                        for (let dr = -1; dr <= 1; dr++) {
+                            for (let dc = -1; dc <= 1; dc++) {
+                                let nr = r + dr, nc = c + dc;
+                                if (nr >= 0 && nr < msRows && nc >= 0 && nc < msCols && msGrid[nr][nc].mine) {
+                                    count++;
+                                }
+                            }
+                        }
+                        msGrid[r][c].count = count;
+                    }
+                }
+            }
+        }
+
+        function revealMsCell(r, c) {
+            if (msGameOver || msGrid[r][c].revealed || msGrid[r][c].flagged) return;
+            let cell = msGrid[r][c];
+            cell.revealed = true;
+            cell.el.style.borderTop = '1px solid #808080';
+            cell.el.style.borderLeft = '1px solid #808080';
+            cell.el.style.borderBottom = '1px solid #fff';
+            cell.el.style.borderRight = '1px solid #fff';
+            cell.el.style.backgroundColor = '#d3d3d3';
+
+            if (cell.mine) {
+                msGameOver = true;
+                cell.el.innerText = '💣';
+                cell.el.style.backgroundColor = 'red';
+                document.getElementById('ms-face').innerText = '😵';
+                for(let i=0; i<msRows; i++) {
+                    for(let j=0; j<msCols; j++) {
+                        if(msGrid[i][j].mine && !msGrid[i][j].flagged) {
+                            msGrid[i][j].el.innerText = '💣';
+                            msGrid[i][j].el.style.border = '1px solid #808080';
+                        }
+                    }
+                }
+                return;
+            }
+
+            if (cell.count > 0) {
+                cell.el.innerText = cell.count;
+                const colors = ['','blue','green','red','purple','maroon','turquoise','black','gray'];
+                cell.el.style.color = colors[cell.count];
+            } else {
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        let nr = r + dr, nc = c + dc;
+                        if (nr >= 0 && nr < msRows && nc >= 0 && nc < msCols) {
+                            revealMsCell(nr, nc);
+                        }
+                    }
+                }
+            }
+            checkMsWin();
+        }
+
+        function flagMsCell(r, c) {
+            if (msGameOver || msGrid[r][c].revealed) return;
+            let cell = msGrid[r][c];
+            if (cell.flagged) {
+                cell.flagged = false;
+                cell.el.innerText = '';
+                msFlags--;
+            } else {
+                cell.flagged = true;
+                cell.el.innerText = '🚩';
+                msFlags++;
+            }
+            document.getElementById('ms-mines').innerText = (msMines - msFlags).toString().padStart(3, '0');
+        }
+        
+        function checkMsWin() {
+            let hiddenSafe = 0;
+            for(let i=0; i<msRows; i++) {
+                for(let j=0; j<msCols; j++) {
+                    if(!msGrid[i][j].mine && !msGrid[i][j].revealed) hiddenSafe++;
+                }
+            }
+            if(hiddenSafe === 0) {
+                msGameOver = true;
+                document.getElementById('ms-face').innerText = '😎';
+            }
+        }
+
+        // --- DETAILED DINO RUNNER ---
+        let activeGame = null;
+
+        function openGameWindow(id) {
+            openWindow(id);
+            if (id === 'dinoWindow') initDinoGame();
+        }
+
+        function closeGameWindow(id) {
+            closeWindow(id);
+            if(activeGame === id) activeGame = null;
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                if (activeGame === 'dinoWindow') dinoJump();
+                if (activeGame) e.preventDefault(); 
+            }
+        });
+
+        let dinoCtx, dinoFrame, dinoState;
+        function initDinoGame() {
+            activeGame = 'dinoWindow';
+            const canvas = document.getElementById('dinoCanvas');
+            dinoCtx = canvas.getContext('2d');
+            canvas.onmousedown = dinoJump;
+            
+            dinoState = {
+                dinoY: 80, 
+                dinoVel: 0,
+                gravity: 0.6,
+                isJumping: false,
+                obstacles: [],
+                bumps: [],
+                clouds: [],
+                score: 0,
+                gameOver: false,
+                frame: 0
+            };
+            cancelAnimationFrame(dinoFrame);
+            dinoLoop();
+        }
+
+        function dinoJump() {
+            if (dinoState.gameOver) {
+                initDinoGame();
+                return;
+            }
+            if (!dinoState.isJumping) {
+                dinoState.dinoVel = -10.5;
+                dinoState.isJumping = true;
+            }
+        }
+
+        function drawRex(ctx, x, y) {
+            ctx.fillStyle = '#535353';
+            ctx.fillRect(x + 22, y, 18, 2);    
+            ctx.fillRect(x + 20, y + 2, 22, 2); 
+            ctx.fillRect(x + 20, y + 4, 24, 2);
+            ctx.fillRect(x + 20, y + 6, 24, 2); 
+            ctx.fillStyle = '#f0f0f0';            
+            ctx.fillRect(x + 24, y + 2, 2, 2); 
+            ctx.fillStyle = '#535353';
+            ctx.fillRect(x + 20, y + 8, 24, 2);
+            ctx.fillRect(x + 20, y + 10, 14, 2); 
+            ctx.fillRect(x + 20, y + 12, 14, 2); 
+            ctx.fillRect(x + 24, y + 14, 10, 2); 
+            ctx.fillRect(x + 18, y + 16, 12, 2); 
+            ctx.fillRect(x + 16, y + 18, 14, 2);
+            ctx.fillRect(x + 14, y + 20, 16, 2); 
+            ctx.fillRect(x + 12, y + 22, 20, 2); 
+            ctx.fillRect(x + 10, y + 24, 26, 2); 
+            ctx.fillRect(x + 8,  y + 26, 28, 2);
+            ctx.fillRect(x + 6,  y + 28, 30, 2);
+            ctx.fillRect(x + 4,  y + 30, 32, 2);
+            ctx.fillRect(x + 2,  y + 32, 34, 2);
+            ctx.fillRect(x,      y + 34, 30, 2); 
+            ctx.fillRect(x,      y + 36, 28, 2);
+            ctx.fillRect(x,      y + 38, 24, 2);
+            ctx.fillRect(x + 2,  y + 40, 20, 2); 
+            ctx.fillRect(x + 4,  y + 42, 16, 2);
+            ctx.fillRect(x + 6,  y + 44, 12, 2);
+            
+            let isRunning = !dinoState.isJumping && !dinoState.gameOver;
+            let runFrame = Math.floor(dinoState.frame / 6) % 2;
+
+            if (!isRunning || runFrame === 0) {
+                ctx.fillRect(x + 8, y + 46, 4, 2);
+                ctx.fillRect(x + 8, y + 48, 4, 2);
+                ctx.fillRect(x + 8, y + 50, 6, 2);
+                ctx.fillRect(x + 14, y + 46, 4, 2);
+                ctx.fillRect(x + 14, y + 48, 4, 2);
+            } else {
+                ctx.fillRect(x + 8, y + 46, 4, 2);
+                ctx.fillRect(x + 8, y + 48, 4, 2);
+                ctx.fillRect(x + 14, y + 46, 4, 2);
+                ctx.fillRect(x + 14, y + 48, 4, 2);
+                ctx.fillRect(x + 14, y + 50, 6, 2);
+            }
+        }
+        
+        function drawCactus(ctx, x, y, type) {
+            ctx.fillStyle = '#535353';
+            if (type === 1) { 
+                ctx.fillRect(x + 6, y, 6, 28); 
+                ctx.fillRect(x, y + 8, 4, 10); 
+                ctx.fillRect(x + 4, y + 16, 2, 2); 
+                ctx.fillRect(x + 14, y + 6, 4, 10); 
+                ctx.fillRect(x + 12, y + 14, 2, 2);
+            } else if (type === 2) { 
+                ctx.fillRect(x + 9, y, 9, 50); 
+                ctx.fillRect(x, y + 12, 6, 20); 
+                ctx.fillRect(x + 6, y + 28, 3, 4); 
+                ctx.fillRect(x + 21, y + 8, 6, 20); 
+                ctx.fillRect(x + 18, y + 24, 3, 4);
+            }
+        }
+
+        function drawBird(ctx, x, y, frame) {
+            ctx.fillStyle = '#535353';
+            ctx.fillRect(x+10, y+10, 15, 6);
+            if(Math.floor(frame / 8) % 2 === 0) { 
+                ctx.fillRect(x+14, y, 8, 10);
+            } else { 
+                ctx.fillRect(x+14, y+16, 8, 10);
+            }
+            ctx.fillRect(x+25, y+6, 8, 6);
+            ctx.fillRect(x+33, y+8, 6, 4); 
+        }
+
+        function dinoLoop() {
+            if (activeGame !== 'dinoWindow') return; 
+            
+            dinoState.dinoY += dinoState.dinoVel;
+            dinoState.dinoVel += dinoState.gravity;
+            if (dinoState.dinoY >= 80) {
+                dinoState.dinoY = 80;
+                dinoState.isJumping = false;
+            }
+
+            dinoState.frame++;
+            
+            // Slower spawn rate
+            if (dinoState.frame % 120 === 0) {
+                let type = Math.random();
+                if (type < 0.4) {
+                    dinoState.obstacles.push({ x: 400, y: 102, w: 18, h: 28, type: 1 });
+                } else if (type < 0.8) {
+                    dinoState.obstacles.push({ x: 400, y: 80, w: 27, h: 50, type: 2 }); 
+                } else {
+                    let birdY = Math.random() > 0.5 ? 90 : 50; 
+                    dinoState.obstacles.push({ x: 400, y: birdY, w: 40, h: 20, type: 3 }); 
+                }
+            }
+
+            if (dinoState.frame % 15 === 0) {
+                dinoState.bumps.push({ x: 400, y: 132 + Math.random() * 8 });
+            }
+
+            if (dinoState.frame % 160 === 0) {
+                dinoState.clouds.push({ x: 400, y: 20 + Math.random() * 30 });
+            }
+
+            dinoCtx.fillStyle = '#f0f0f0';
+            dinoCtx.fillRect(0, 0, 400, 150);
+            
+            // Draw Clouds
+            dinoCtx.strokeStyle = '#aaa';
+            dinoCtx.lineWidth = 2;
+            for (let i = 0; i < dinoState.clouds.length; i++) {
+                let c = dinoState.clouds[i];
+                c.x -= 1; // Slow moving clouds
+                dinoCtx.strokeRect(c.x+10, c.y, 20, 10);
+                dinoCtx.strokeRect(c.x, c.y+10, 40, 10);
+            }
+            dinoState.clouds = dinoState.clouds.filter(c => c.x > -50);
+
+            // Ground
+            dinoCtx.fillStyle = '#000';
+            dinoCtx.beginPath();
+            dinoCtx.moveTo(0, 130);
+            dinoCtx.lineTo(400, 130);
+            dinoCtx.stroke();
+
+            // Floor bumps
+            dinoCtx.fillStyle = '#535353';
+            for (let i=0; i<dinoState.bumps.length; i++) {
+                let b = dinoState.bumps[i];
+                b.x -= 3.5; // Slower speed
+                dinoCtx.fillRect(b.x, b.y, 3, 1);
+            }
+            dinoState.bumps = dinoState.bumps.filter(b => b.x > -10);
+
+            drawRex(dinoCtx, 40, dinoState.dinoY);
+
+            for (let i = 0; i < dinoState.obstacles.length; i++) {
+                let obs = dinoState.obstacles[i];
+                obs.x -= 3.5; 
+                
+                if (obs.type === 3) {
+                    drawBird(dinoCtx, obs.x, obs.y, dinoState.frame);
+                } else {
+                    drawCactus(dinoCtx, obs.x, obs.y, obs.type);
+                }
+
+                // Tighter hitbox
+                let dX = 45, dW = 20, dY = dinoState.dinoY + 5, dH = 35; 
+                if (dX + dW > obs.x && dX < obs.x + obs.w && dY + dH > obs.y && dY < obs.y + obs.h) {
+                    dinoState.gameOver = true;
+                }
+            }
+
+            dinoState.obstacles = dinoState.obstacles.filter(o => o.x > -40);
+
+            if (!dinoState.gameOver) dinoState.score++;
+            dinoCtx.fillStyle = '#535353';
+            dinoCtx.font = '20px VT323';
+            dinoCtx.fillText(`HI 00000 ${Math.floor(dinoState.score/10).toString().padStart(5, '0')}`, 250, 20);
+
+            if (dinoState.gameOver) {
+                dinoCtx.fillText("GAME OVER", 160, 70);
+            } else {
+                dinoFrame = requestAnimationFrame(dinoLoop);
+            }
+        }
+let isSelecting = false;
+let startX = 0;
+let startY = 0;
+
+const selectionBox = document.getElementById('selection-box');
+const desktopArea = document.getElementById('desktopArea');
+
+// 1. Start the selection
+desktopArea.addEventListener('mousedown', function(e) {
+    // Only start selecting if clicking the empty desktop
+    // We don't want to draw a box if the user is clicking a window or an icon
+    if (e.target.closest('.desktop-icon') || e.target.closest('.window')) {
+        return;
+    }
+
+    isSelecting = true;
+    startX = e.clientX;
+    startY = e.clientY;
+
+    // Reset and show the box
+    selectionBox.style.left = startX + 'px';
+    selectionBox.style.top = startY + 'px';
+    selectionBox.style.width = '0px';
+    selectionBox.style.height = '0px';
+    selectionBox.style.display = 'block';
+
+    // Deselect previously selected icons
+    document.querySelectorAll('.desktop-icon').forEach(icon => {
+        icon.classList.remove('selected');
+    });
+});
+
+// 2. Draw the box and select icons
+document.addEventListener('mousemove', function(e) {
+    if (!isSelecting) return;
+
+    // Calculate current mouse position
+    const currentX = e.clientX;
+    const currentY = e.clientY;
+
+    // Calculate box dimensions (this allows dragging in any direction)
+    const left = Math.min(startX, currentX);
+    const top = Math.min(startY, currentY);
+    const width = Math.abs(startX - currentX);
+    const height = Math.abs(startY - currentY);
+
+    // Draw the box
+    selectionBox.style.left = left + 'px';
+    selectionBox.style.top = top + 'px';
+    selectionBox.style.width = width + 'px';
+    selectionBox.style.height = height + 'px';
+
+    // Check which icons intersect with the selection box
+    document.querySelectorAll('.desktop-icon').forEach(icon => {
+        const rect = icon.getBoundingClientRect();
+        
+        // Simple collision detection
+        const isOverlapping = !(
+            rect.right < left || 
+            rect.left > left + width || 
+            rect.bottom < top || 
+            rect.top > top + height
+        );
+
+        if (isOverlapping) {
+            icon.classList.add('selected');
+        } else {
+            icon.classList.remove('selected');
+        }
+    });
+});
+
+// 3. End the selection
+document.addEventListener('mouseup', function() {
+    if (isSelecting) {
+        isSelecting = false;
+        selectionBox.style.display = 'none'; // Hide the box when you let go
+    }
+});
+
+let grid2048 = Array(16).fill('');
+
+// Helper to open the window and start the game
+function openWin2048() {
+    openWindow('win2048'); // Make sure this matches your window opening function!
+    init2048();
+}
+
+function init2048() {
+    grid2048.fill('');
+    addRandomTile2048();
+    addRandomTile2048();
+    draw2048();
+}
+
+function addRandomTile2048() {
+    // Find empty spots
+    let emptySpots = grid2048.map((val, index) => val === '' ? index : null).filter(val => val !== null);
+    if (emptySpots.length > 0) {
+        // Pick a random empty spot
+        let randomSpot = emptySpots[Math.floor(Math.random() * emptySpots.length)];
+        // 90% chance of a 2, 10% chance of a 4
+        grid2048[randomSpot] = Math.random() > 0.9 ? 4 : 2;
+    }
+}
+
+function get2048Color(val) {
+    const colors = {
+        '': '#cdc1b4', '2': '#eee4da', '4': '#ede0c8', '8': '#f2b179',
+        '16': '#f59563', '32': '#f67c5f', '64': '#f65e3b', '128': '#edcf72',
+        '256': '#edcc61', '512': '#edc850', '1024': '#edc53f', '2048': '#edc22e'
+    };
+    return colors[val] || '#3c3a32';
+}
+
+function draw2048() {
+    const container = document.getElementById('g2048');
+    container.innerHTML = '';
+    
+    grid2048.forEach(val => {
+        const cell = document.createElement('div');
+        cell.className = 'cell2048';
+        cell.innerText = val;
+        cell.style.backgroundColor = get2048Color(val);
+        // Change text color for higher numbers
+        if (val >= 8) cell.style.color = '#f9f6f2'; 
+        container.appendChild(cell);
+    });
+}
+
+// Slide and merge array helper
+function slideRow2048(row) {
+    let arr = row.filter(val => val); // Remove empty spaces
+    for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i] === arr[i+1]) {
+            arr[i] *= 2;
+            arr[i+1] = ''; // Mark as merged
+        }
+    }
+    arr = arr.filter(val => val); // Remove the newly created empty spaces
+    while (arr.length < 4) arr.push(''); // Pad with empty spaces
+    return arr;
+}
+
+// Listen for arrow keys
+window.addEventListener('keydown', (e) => {
+    // Only run 2048 logic if the window is actually visible
+    const win = document.getElementById('win2048');
+    if (!win || win.style.display === 'none') return;
+
+    let moved = false;
+
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        for (let r = 0; r < 4; r++) {
+            let row = grid2048.slice(r * 4, r * 4 + 4);
+            if (e.key === 'ArrowRight') row.reverse();
+            
+            let newRow = slideRow2048(row);
+            
+            if (e.key === 'ArrowRight') newRow.reverse();
+            for (let c = 0; c < 4; c++) {
+                if (grid2048[r * 4 + c] !== newRow[c]) moved = true;
+                grid2048[r * 4 + c] = newRow[c];
+            }
+        }
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        for (let c = 0; c < 4; c++) {
+            let col = [grid2048[c], grid2048[c + 4], grid2048[c + 8], grid2048[c + 12]];
+            if (e.key === 'ArrowDown') col.reverse();
+            
+            let newCol = slideRow2048(col);
+            
+            if (e.key === 'ArrowDown') newCol.reverse();
+            for (let r = 0; r < 4; r++) {
+                if (grid2048[r * 4 + c] !== newCol[r]) moved = true;
+                grid2048[r * 4 + c] = newCol[r];
+            }
+        }
+    }
+
+    if (moved) {
+        e.preventDefault(); // Stop window from scrolling
+        addRandomTile2048();
+        draw2048();
+    }
+});
+    </script>
+</body>
+</html>

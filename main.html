@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JDK Studios</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #060810;
+    --surface: #0a0d16;
+    --card: #0e1220;
+    --blue: #5eb8e8;
+    --blue-dim: #3a7ca8;
+    --blue-glow: rgba(94,184,232,0.12);
+    --ash: #8a9ab0;
+    --white: #e8eef5;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Mono', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CURSOR */
+  .cursor {
+    position: fixed; width: 10px; height: 10px;
+    background: var(--blue); border-radius: 50%;
+    pointer-events: none; z-index: 9999;
+    top: 0; left: 0;
+    will-change: transform;
+    transition: width 0.2s, height 0.2s, opacity 0.2s;
+  }
+  .cursor-ring {
+    position: fixed; width: 36px; height: 36px;
+    border: 1px solid var(--blue); border-radius: 50%;
+    pointer-events: none; z-index: 9998;
+    top: 0; left: 0;
+    will-change: transform;
+    transition: width 0.3s, height 0.3s;
+  }
+
+  /* GRAIN */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.03; pointer-events: none; z-index: 9000;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 28px 60px;
+    background: linear-gradient(to bottom, rgba(6,8,16,0.97), transparent);
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem;
+    letter-spacing: 0.15em; color: var(--blue); text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a {
+    font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ash); text-decoration: none; transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--blue); }
+
+  /* HERO */
+  .hero {
+    position: relative; min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: flex-end; padding: 0 60px 80px; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      linear-gradient(to right, rgba(6,8,16,0.97) 0%, rgba(6,8,16,0.75) 45%, rgba(6,8,16,0.15) 100%),
+      linear-gradient(to top, rgba(6,8,16,0.92) 0%, transparent 35%);
+  }
+  .hero-bg-photo {
+    position: absolute; inset: 0; z-index: -1;
+    background-image: url('images/IMG_5040__1_.jpg');
+    background-size: 160%;
+    background-position: 20% 20%;
+    filter: saturate(0.15) brightness(0.7) sepia(0.5) hue-rotate(175deg) saturate(2.5);
+    opacity: 0;
+    animation: fadeIn 2s 0.3s ease forwards;
+  }
+  .hero-line {
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--blue-dim), transparent);
+    animation: lineIn 2s ease forwards; transform-origin: left;
+  }
+  @keyframes lineIn { from{transform:scaleX(0);opacity:0} to{transform:scaleX(1);opacity:1} }
+  .hero-eyebrow {
+    font-size: 0.65rem; letter-spacing: 0.35em; color: var(--blue);
+    text-transform: uppercase; margin-bottom: 24px;
+    opacity: 0; animation: fadeUp 1s 0.4s ease forwards;
+  }
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(5rem, 14vw, 13rem);
+    line-height: 0.88; letter-spacing: 0.01em; color: var(--white);
+    opacity: 0; animation: fadeUp 1s 0.6s ease forwards;
+  }
+  .hero-title span { display: block; -webkit-text-stroke: 1px var(--blue); color: transparent; }
+  .hero-sub {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: clamp(1rem, 2vw, 1.35rem); color: var(--ash);
+    margin-top: 32px; max-width: 480px; line-height: 1.6;
+    opacity: 0; animation: fadeUp 1s 0.9s ease forwards;
+  }
+  .hero-ctas {
+    display: flex; gap: 20px; margin-top: 48px;
+    opacity: 0; animation: fadeUp 1s 1.1s ease forwards;
+  }
+  .hero-scroll {
+    position: absolute; right: 60px; bottom: 80px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    opacity: 0; animation: fadeIn 1s 1.5s ease forwards;
+  }
+  .hero-scroll span {
+    font-size: 0.55rem; letter-spacing: 0.3em; color: var(--ash);
+    text-transform: uppercase; writing-mode: vertical-rl;
+  }
+  .scroll-line {
+    width: 1px; height: 60px;
+    background: linear-gradient(to bottom, var(--blue), transparent);
+    animation: scrollPulse 2s 2s infinite;
+  }
+  @keyframes scrollPulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  /* BUTTONS */
+  .btn-primary {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 16px 36px; background: var(--blue); color: var(--black);
+    text-decoration: none; border: none; cursor: none;
+    transition: background 0.3s, transform 0.2s; display: inline-block;
+  }
+  .btn-primary:hover { background: var(--white); transform: translateY(-2px); }
+  .btn-ghost {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 16px 36px; background: transparent; color: var(--ash);
+    text-decoration: none; border: 1px solid #1a2235; cursor: none;
+    transition: border-color 0.3s, color 0.3s, transform 0.2s; display: inline-block;
+  }
+  .btn-ghost:hover { border-color: var(--blue); color: var(--blue); transform: translateY(-2px); }
+
+  /* SECTION BASE */
+  section { padding: 100px 60px; }
+  .section-eyebrow {
+    font-size: 0.6rem; letter-spacing: 0.4em; color: var(--blue);
+    text-transform: uppercase; margin-bottom: 16px; display: block;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    letter-spacing: 0.03em; line-height: 1; color: var(--white); margin-bottom: 24px;
+  }
+
+  /* ABOUT */
+  #about { background: var(--surface); }
+  .about-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 80px; align-items: center; }
+  .about-visual { position: relative; }
+  .about-frame { width: 100%; aspect-ratio: 3/4; background: var(--card); position: relative; overflow: hidden; }
+  .about-frame-inner {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(94,184,232,0.08) 0%, transparent 70%),
+      linear-gradient(180deg, #0e1830 0%, #06080f 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  }
+  .placeholder-icon { font-size: 3rem; opacity: 0.2; }
+  .placeholder-text { font-size: 0.6rem; letter-spacing: 0.2em; color: var(--ash); text-transform: uppercase; opacity: 0.35; }
+  .about-frame-border { position: absolute; top: 16px; left: 16px; right: -16px; bottom: -16px; border: 1px solid #1a2235; z-index: -1; }
+  .about-body { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; line-height: 1.9; color: var(--ash); margin-bottom: 20px; }
+  .about-body strong { color: var(--white); font-weight: 600; }
+  .about-traits { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
+  .trait { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 8px 16px; border: 1px solid #1a2235; color: var(--blue-dim); }
+
+  /* WORK TABS */
+  #work { background: var(--black); }
+  .tabs-nav {
+    display: flex; margin-bottom: 60px;
+    border-bottom: 1px solid #1a2235;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+  .tabs-nav::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    padding: 18px 32px; background: transparent; color: var(--ash);
+    border: none; cursor: none; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: color 0.3s, border-color 0.3s; white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--white); }
+  .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeIn 0.4s ease; }
+
+  .tab-intro {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 1.1rem; color: var(--ash); max-width: 600px; line-height: 1.8; margin-bottom: 48px;
+  }
+
+  /* Partnership — now at bottom */
+  .partnership {
+    display: inline-flex; align-items: center; gap: 20px;
+    border: 1px solid #1a2235; padding: 18px 28px; margin-top: 52px;
+  }
+  .partnership-label { font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--blue-dim); display: block; margin-bottom: 4px; }
+  .partnership-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.1em; color: var(--white); }
+
+  /* Credits */
+  .credits-section { margin-bottom: 48px; }
+  .credits-label { font-size: 0.58rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--blue-dim); display: block; margin-bottom: 16px; }
+  .credits-list { display: flex; flex-wrap: wrap; gap: 10px; }
+  .credit-tag {
+    font-size: 0.65rem; letter-spacing: 0.1em;
+    padding: 7px 16px; border: 1px solid #1a2235; color: var(--ash);
+    transition: border-color 0.3s, color 0.3s;
+  }
+  .credit-tag:hover { border-color: var(--blue-dim); color: var(--blue); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+
+  /* Media grids */
+  .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 2px; }
+  .media-grid.photo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    content-visibility: auto;
+    contain-intrinsic-size: 0 400px;
+  }
+  .media-grid.photo-grid .media-card {
+    contain: layout style;
+  }
+  .media-grid.photo-grid .media-card .media-card-inner {
+    background: var(--card);
+  }
+  .media-grid.thumb-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+
+  .media-card { background: var(--card); border: 1px solid #1a2235; overflow: hidden; transition: border-color 0.3s; position: relative; }
+  .media-card::after {
+    content: ''; position: absolute; inset: 0;
+    box-shadow: inset 0 0 20px rgba(94,184,232,0.08);
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .media-card:hover { border-color: var(--blue-dim); }
+  .media-card:hover::after { opacity: 1; }
+
+  .media-card-inner {
+    aspect-ratio: 1/1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; padding: 20px;
+    background: radial-gradient(ellipse at center, #0e1830, var(--card));
+  }
+  .media-card-inner.photo-ratio { aspect-ratio: 4/3; }
+  .media-card-inner.thumb-ratio { aspect-ratio: 16/9; overflow: hidden; padding: 0; }
+  .media-card-inner.thumb-ratio img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+  .media-card:hover .media-card-inner.thumb-ratio img { transform: scale(1.03); }
+
+  .media-ph-icon { font-size: 2rem; opacity: 0.18; }
+  .media-ph-text { font-size: 0.55rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ash); opacity: 0.3; text-align: center; }
+  .media-caption { padding: 12px 16px; border-top: 1px solid #1a2235; font-size: 0.6rem; letter-spacing: 0.08em; color: #4a6080; }
+
+  /* CONTACT */
+  #contact { background: var(--surface); }
+  .contact-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  .contact-tagline { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.1rem; color: var(--ash); line-height: 1.7; margin-bottom: 48px; }
+  .contact-info-item { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #1a2235; }
+  .contact-info-item:last-child { border-bottom: none; }
+  .contact-info-icon { font-size: 1.1rem; margin-top: 2px; }
+  .contact-info-label { font-size: 0.55rem; letter-spacing: 0.3em; color: var(--blue-dim); text-transform: uppercase; display: block; margin-bottom: 4px; }
+  .contact-info-value { font-size: 0.8rem; color: var(--white); }
+  .contact-form { display: flex; flex-direction: column; gap: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-label { font-size: 0.58rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ash); }
+  .form-input, .form-select, .form-textarea {
+    background: var(--card); border: 1px solid #1a2235; color: var(--white);
+    font-family: 'DM Mono', monospace; font-size: 0.8rem;
+    padding: 14px 16px; outline: none; transition: border-color 0.3s;
+    width: 100%; -webkit-appearance: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue-dim); }
+  .form-select option { background: var(--card); }
+  .form-textarea { resize: vertical; min-height: 120px; font-family: 'DM Mono', monospace; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-submit {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 18px 40px; background: var(--blue); color: var(--black);
+    border: none; cursor: none; transition: background 0.3s, transform 0.2s; align-self: flex-start;
+  }
+  .form-submit:hover { background: var(--white); transform: translateY(-2px); }
+
+  /* FOOTER */
+  footer { padding: 40px 60px; border-top: 1px solid #1a2235; display: flex; justify-content: space-between; align-items: center; }
+  .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.15em; color: var(--blue-dim); }
+  .footer-copy { font-size: 0.6rem; letter-spacing: 0.15em; color: #2a3a50; }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { font-size: 0.6rem; letter-spacing: 0.15em; color: #2a3a50; text-decoration: none; transition: color 0.3s; }
+  .footer-links a:hover { color: var(--blue); }
+
+  /* LIGHTBOX */
+  .lightbox-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9500;
+    background: rgba(6,8,16,0.95); align-items: center; justify-content: center;
+    cursor: none;
+  }
+  .lightbox-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
+  .lightbox-img {
+    max-width: 90vw; max-height: 88vh; object-fit: contain;
+    box-shadow: 0 0 60px rgba(94,184,232,0.15);
+  }
+  .lightbox-close {
+    position: fixed; top: 28px; right: 40px;
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    letter-spacing: 0.3em; text-transform: uppercase; color: var(--ash);
+    cursor: none; background: none; border: 1px solid #1a2235;
+    padding: 10px 18px; transition: color 0.3s, border-color 0.3s;
+  }
+  .lightbox-close:hover { color: var(--blue); border-color: var(--blue); }
+  .lightbox-caption {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+    font-size: 0.65rem; letter-spacing: 0.2em; color: var(--ash);
+    text-transform: uppercase;
+  }
+
+  /* Clickable images */
+  .lightbox-trigger { cursor: none; }
+  .media-card { cursor: none; }
+  .media-card img { cursor: none; }
+
+  /* Partnership logo */
+  .partnership-logo {
+    width: 100px; height: 100px; background: var(--card);
+    border: 1px solid #1a2235; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px;
+    margin-top: 16px; transition: border-color 0.3s;
+    overflow: hidden; aspect-ratio: 1/1;
+  }
+  .partnership-logo:hover { border-color: var(--blue-dim); }
+  .partnership-logo img { width: 100%; height: 100%; object-fit: cover; cursor: none; }
+  .partnership-logo .ph-icon { font-size: 1.4rem; opacity: 0.2; }
+  .partnership-logo .ph-text { font-size: 0.5rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ash); opacity: 0.3; }
+
+  /* EDITS GRID */
+  .edits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2px;
+  }
+  .edit-card { background: var(--card); border: 1px solid #1a2235; overflow: hidden; transition: border-color 0.3s; text-decoration: none; display: block; cursor: none; }
+  .edit-card:hover { border-color: var(--blue-dim); }
+  .edit-thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; }
+  .edit-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+  .edit-card:hover .edit-thumb img { transform: scale(1.04); }
+  .edit-play {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(6,8,16,0.4); color: var(--white); font-size: 2.5rem;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .edit-card:hover .edit-play { opacity: 1; }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    nav { padding: 24px 28px; }
+    .nav-links { gap: 20px; }
+    section { padding: 60px 28px; }
+    .hero { padding: 0 28px 60px; }
+    .about-grid { grid-template-columns: 1fr; gap: 40px; }
+    .two-col { grid-template-columns: 1fr; }
+    .contact-layout { grid-template-columns: 1fr; gap: 40px; }
+    .form-row { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+    .hero-scroll { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">JDK Studios</a>
+  <ul class="nav-links">
+    <li><a href="#">Home</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#work">Work</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="desktop-view.html">Desktop</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-photo"></div>
+  <div class="hero-bg"></div>
+  <div class="hero-line"></div>
+  <p class="hero-eyebrow">Sound · Vision · Engineering</p>
+  <h1 class="hero-title">
+    JDK<br>
+    <span>Studios</span>
+  </h1>
+  <p class="hero-sub">Live sound. Studio engineering. Photography. Visual design. One operator, four disciplines, zero compromise.</p>
+  <div class="hero-ctas">
+    <a href="desktop-view.html" class="btn-primary">View Desktop</a>
+    <a href="#work" class="btn-ghost">View My Work</a>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-grid">
+    <div class="about-visual reveal">
+      <div class="about-frame">
+        <div class="about-frame-inner" style="padding:0;">
+          <img src="images/PXL_20251119_050858109_4.jpg" alt="DJ JDK" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block;">
+        </div>
+      </div>
+      <div class="about-frame-border"></div>
+    </div>
+    <div class="reveal">
+      <span class="section-eyebrow">The Person Behind It</span>
+      <h2 class="section-title">DJ JDK</h2>
+      <p class="about-body">It started in <strong>fourth grade</strong> — a kid in percussion ensemble who didn't yet know what music would become to him. By late seventh grade, something clicked. By high school, there was no turning back. Since then, music hasn't just been a career; it's been a way of life — in school, outside of it, everywhere in between.</p>
+      <p class="about-body">The journey started in <strong>rap and hip-hop</strong>, but 2024 changed that. Rock, country, and more have entered the picture — and that expansion isn't stopping. Every genre is a new lens, a new set of tools, a new way to hear the world.</p>
+      <p class="about-body">Whatever the discipline — mixing a live show, engineering a record, shooting a set, designing a frame — the approach never changes: <strong>passionate, driven, and obsessively detail-oriented.</strong></p>
+      <div class="about-traits">
+        <span class="trait">Passionate</span>
+        <span class="trait">Detail-Oriented</span>
+        <span class="trait">Driven</span>
+        <span class="trait">Multi-Genre</span>
+        <span class="trait">Multi-Discipline</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work">
+  <span class="section-eyebrow reveal">Disciplines</span>
+  <h2 class="section-title reveal">My Work</h2>
+
+  <div class="tabs-nav reveal">
+    <button class="tab-btn active" onclick="switchTab('live', this)">Live Sound</button>
+    <button class="tab-btn" onclick="switchTab('studio', this)">Studio</button>
+    <button class="tab-btn" onclick="switchTab('photo', this)">Photography</button>
+    <button class="tab-btn" onclick="switchTab('thumb', this)">Thumbnails</button>
+    <button class="tab-btn" onclick="switchTab('edits', this)">Edits</button>
+  </div>
+
+  <!-- LIVE SOUND -->
+  <div class="tab-panel active" id="tab-live">
+    <p class="tab-intro">Front-of-house and monitor mixing for live events of any scale. Every show is mixed to land — clean, loud, and true to the artist's vision.</p>
+    <div class="two-col">
+      <div class="credits-section">
+        <span class="credits-label">Bands &amp; Artists</span>
+        <div class="media-grid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:2px;margin-top:12px;">
+          <div class="media-card">
+            <div class="media-card-inner" style="aspect-ratio:1/1;padding:0;overflow:hidden;">
+              <img src="images/NorthCounty.jpeg" alt="North County" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+            </div>
+            <div class="media-caption">North County</div>
+          </div>
+          <div class="media-card">
+            <div class="media-card-inner" style="aspect-ratio:1/1;padding:0;overflow:hidden;">
+              <img src="images/PulseBand.jpg" alt="Pulse" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+            </div>
+            <div class="media-caption">Pulse</div>
+          </div>
+        </div>
+      </div>
+      <div class="credits-section">
+        <span class="credits-label">Venues</span>
+        <div class="media-grid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:2px;margin-top:12px;">
+          <div class="media-card">
+            <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+              <img src="images/DanburyElicit.webp" alt="Elicit Brewing — Danbury, CT" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+            </div>
+            <div class="media-caption">Elicit Brewing — Danbury, CT</div>
+          </div>
+          <div class="media-card">
+            <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+              <img src="images/FairfieldElicit.webp" alt="Elicit Brewing — Fairfield, CT" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+            </div>
+            <div class="media-caption">Elicit Brewing — Fairfield, CT</div>
+          </div>
+          <div class="media-card">
+            <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+              <img src="images/WoodburyBrewing.webp" alt="Woodbury Brewing" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+            </div>
+            <div class="media-caption">Woodbury Brewing</div>
+          </div>
+          <div class="media-card">
+            <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+              <img src="images/Ballards.jpg" alt="Ballard's Block Island" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+            </div>
+            <div class="media-caption">Ballard's — Block Island, RI</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="partnership" style="margin-top:12px;">
+      <div>
+        <span class="partnership-label">In Partnership With</span>
+        <div class="partnership-name">WAV Productions LLC</div>
+        <div class="partnership-logo lightbox-trigger" data-caption="WAV Productions LLC">
+          <img src="images/WAV_Logo.jpg" alt="WAV Productions LLC">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDIO -->
+  <div class="tab-panel" id="tab-studio">
+    <p class="tab-intro">Recording, mixing, and production across Pro Tools, Logic Pro, and FL Studio. Studio credits that span hip-hop, bluegrass, and beyond.</p>
+    <div class="credits-section">
+      <span class="credits-label">Notable Credits</span>
+      <div class="credits-list">
+        <span class="credit-tag">Taulia</span>
+        <span class="credit-tag">Billy Strings</span>
+        <span class="credit-tag">Ace Turk</span>
+        <span class="credit-tag">SYKE</span>
+        <span class="credit-tag">Somethin' Trippy</span>
+      </div>
+    </div>
+    <span class="credits-label">Album Covers</span>
+    <div class="media-grid">
+      <div class="media-card">
+        <div class="media-card-inner" style="padding:0;"><img src="images/1226150-modern-day-cowboy_222251.jpg" alt="Modern Day Cowboy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;"></div>
+        <div class="media-caption">Modern Day Cowboy — Taulia</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner" style="padding:0;"><img src="images/1226073-heaven-can-wait_212351.jpg" alt="Heaven Can Wait" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;"></div>
+        <div class="media-caption">Heaven Can Wait — Ace Turk</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner" style="padding:0;"><img src="images/ab67616d0000b2732dd42130be249b697264719c.jpeg" alt="Everything I Look For" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;"></div>
+        <div class="media-caption">Everything I Look For — Somethin' Trippy</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner" style="padding:0;"><img src="images/ThisIsMe_NEWDELUXE.png" alt="WHO I'VE BECOME" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;"></div>
+        <div class="media-caption">WHO I'VE BECOME — DJ JDK</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner" style="padding:0;"><img src="images/Gemini_Generated_Image_mxacvzmxacvzmxac.png" alt="Coming Soon" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;"></div>
+        <div class="media-caption">? — Coming Soon</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap;margin-top:52px;">
+      <div class="partnership" style="margin-top:0;">
+        <div>
+          <span class="partnership-label">In Partnership With</span>
+          <div class="partnership-name">Station West</div>
+          <div class="partnership-logo lightbox-trigger" data-caption="Station West">
+            <img src="images/stationwest.jpg" alt="Station West">
+          </div>
+        </div>
+      </div>
+      <div class="media-card lightbox-trigger" style="width:220px;border:1px solid #1a2235;overflow:hidden;cursor:none;" data-caption="Session at Station West">
+        <div style="overflow:hidden;">
+          <img src="images/Screenshot_20250924-132949.png" alt="Session at Station West" style="width:100%;display:block;object-fit:cover;transition:transform 0.4s ease;">
+        </div>
+        <div class="media-caption">Session at Station West</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHOTOGRAPHY -->
+  <div class="tab-panel" id="tab-photo">
+    <p class="tab-intro">Concert, event, and artist photography built for the digital age. Raw energy captured with intention — delivered ready to post.</p>
+    <span class="credits-label">Photography Portfolio</span>
+    <div class="media-grid photo-grid" id="photo-grid">
+      <div class="media-card lightbox-trigger" data-caption="Rockefeller Center — New York City">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img data-src="images/IMG_4145.jpg" alt="Rockefeller Center Christmas Tree" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.4s;">
+        </div>
+        <div class="media-caption">Rockefeller Center — New York City</div>
+      </div>
+      <div class="media-card lightbox-trigger" data-caption="Artist Portrait — Hillside">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img data-src="images/IMG_4410.jpg" alt="Artist Portrait — Hillside" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.4s;">
+        </div>
+        <div class="media-caption">Artist Portrait — Hillside</div>
+      </div>
+      <div class="media-card lightbox-trigger" data-caption="Artist Portrait — In the Woods">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img data-src="images/IMG_4450.jpg" alt="Artist Portrait — In the Woods" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.4s;">
+        </div>
+        <div class="media-caption">Artist Portrait — In the Woods</div>
+      </div>
+      <div class="media-card lightbox-trigger" data-caption="Stafford High School — Abandoned">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img data-src="images/IMG_4462.jpg" alt="Abandoned Stafford High School" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.4s;">
+        </div>
+        <div class="media-caption">Stafford High School — Abandoned</div>
+      </div>
+      <div class="media-card lightbox-trigger" data-caption="Artist Portrait — Bridge">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img data-src="images/IMG_5058__3_.jpg" alt="Artist Portrait — Bridge" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.4s;">
+        </div>
+        <div class="media-caption">Artist Portrait — Bridge</div>
+      </div>
+      <div class="media-card lightbox-trigger" data-caption="Artist Portrait — Dam">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img data-src="images/IMG_5069.jpg" alt="Artist Portrait — Dam" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.4s;">
+        </div>
+        <div class="media-caption">Artist Portrait — Dam</div>
+      </div>
+      <div class="media-card lightbox-trigger" data-caption="Baronne St — New Orleans, Long Exposure">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img data-src="images/PXL_20260219_165242551_LONG_EXPOSURE-01_COVER.jpg" alt="New Orleans — Baronne St Long Exposure" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.4s;">
+        </div>
+        <div class="media-caption">Baronne St — New Orleans, Long Exposure</div>
+      </div>
+      <div class="media-card lightbox-trigger" data-caption="Pulse — Woodbury Brewing">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img data-src="images/IMG_4614.jpg" alt="Pulse — Woodbury Brewing" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.4s;">
+        </div>
+        <div class="media-caption">Pulse — Woodbury Brewing</div>
+      </div>
+      <div class="media-card lightbox-trigger" data-caption="Drummer — Live Performance">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img data-src="images/IMG_4652.jpg" alt="Drummer — Live Performance" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.4s;">
+        </div>
+        <div class="media-caption">Drummer — Live Performance</div>
+      </div>
+    </div>
+    <div class="partnership">
+      <div>
+        <span class="partnership-label">In Partnership With</span>
+        <div class="partnership-name">B Train Foamer</div>
+        <div class="partnership-logo lightbox-trigger" data-caption="B Train Foamer">
+          <img src="images/B_Logo.png" alt="B Train Foamer">
+        </div>
+      </div>
+    </div>
+
+    <span class="credits-label" style="margin-top:48px;display:block;">B Train Foamer — Featured Work</span>
+    <div class="media-grid" style="grid-template-columns:repeat(6,1fr);">
+      <div class="media-card">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img src="images/1BTrain.jpg" alt="B Train Foamer — Shot 1" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+        </div>
+        <div class="media-caption">Cyclone</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img src="images/2BTrain.jpg" alt="B Train Foamer — Shot 2" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+        </div>
+        <div class="media-caption">Rare Find</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img src="images/3BTrain.jpg" alt="B Train Foamer — Shot 3" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+        </div>
+        <div class="media-caption">Q Train</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img src="images/4BTrain.jpg" alt="B Train Foamer — Shot 4" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+        </div>
+        <div class="media-caption">2199 Sunset</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img src="images/5BTrain.jpg" alt="B Train Foamer — Shot 5" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+        </div>
+        <div class="media-caption">Sí</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
+          <img src="images/6BTrain.jpg" alt="B Train Foamer — Shot 6" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
+        </div>
+        <div class="media-caption">Panned Train</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITS -->
+  <div class="tab-panel" id="tab-edits">
+    <p class="tab-intro">Video edits crafted for YouTube — cut, paced, and styled to keep viewers watching from start to finish.</p>
+    <span class="credits-label">Edit Portfolio</span>
+    <div class="edits-grid">
+      <a class="edit-card" href="https://www.youtube.com/watch?v=_eqJsVn-HzM" target="_blank">
+        <div class="edit-thumb">
+          <img src="https://img.youtube.com/vi/_eqJsVn-HzM/maxresdefault.jpg" alt="Edit 1" onerror="this.src='https://img.youtube.com/vi/_eqJsVn-HzM/hqdefault.jpg'">
+          <div class="edit-play">▶</div>
+        </div>
+      </a>
+      <a class="edit-card" href="https://www.youtube.com/watch?v=l6eviR5LyKQ" target="_blank">
+        <div class="edit-thumb">
+          <img src="https://img.youtube.com/vi/l6eviR5LyKQ/maxresdefault.jpg" alt="Edit 2" onerror="this.src='https://img.youtube.com/vi/l6eviR5LyKQ/hqdefault.jpg'">
+          <div class="edit-play">▶</div>
+        </div>
+      </a>
+      <a class="edit-card" href="https://www.youtube.com/watch?v=qXZFhUjufjY" target="_blank">
+        <div class="edit-thumb">
+          <img src="https://img.youtube.com/vi/qXZFhUjufjY/maxresdefault.jpg" alt="Edit 3" onerror="this.src='https://img.youtube.com/vi/qXZFhUjufjY/hqdefault.jpg'">
+          <div class="edit-play">▶</div>
+        </div>
+      </a>
+      <a class="edit-card" href="https://www.youtube.com/watch?v=59Xo6AsD-Uo" target="_blank">
+        <div class="edit-thumb">
+          <img src="https://img.youtube.com/vi/59Xo6AsD-Uo/maxresdefault.jpg" alt="Edit 4" onerror="this.src='https://img.youtube.com/vi/59Xo6AsD-Uo/hqdefault.jpg'">
+          <div class="edit-play">▶</div>
+        </div>
+      </a>
+      <a class="edit-card" href="https://www.youtube.com/watch?v=NdrHReqPTJE" target="_blank">
+        <div class="edit-thumb">
+          <img src="https://img.youtube.com/vi/NdrHReqPTJE/maxresdefault.jpg" alt="Edit 5" onerror="this.src='https://img.youtube.com/vi/NdrHReqPTJE/hqdefault.jpg'">
+          <div class="edit-play">▶</div>
+        </div>
+      </a>
+      <a class="edit-card" href="https://www.youtube.com/watch?v=eQGCaEqxYt8" target="_blank">
+        <div class="edit-thumb">
+          <img src="https://img.youtube.com/vi/eQGCaEqxYt8/maxresdefault.jpg" alt="Edit 6" onerror="this.src='https://img.youtube.com/vi/eQGCaEqxYt8/hqdefault.jpg'">
+          <div class="edit-play">▶</div>
+        </div>
+      </a>
+      <a class="edit-card" href="https://www.youtube.com/watch?v=bAWY9EwQ2Lg" target="_blank">
+        <div class="edit-thumb">
+          <img src="https://img.youtube.com/vi/bAWY9EwQ2Lg/maxresdefault.jpg" alt="Edit 7" onerror="this.src='https://img.youtube.com/vi/bAWY9EwQ2Lg/hqdefault.jpg'">
+          <div class="edit-play">▶</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+
+  <div class="tab-panel" id="tab-thumb">
+    <p class="tab-intro">High-converting thumbnails engineered for click-through. Designed for the algorithm, built for attention — every frame is a decision.</p>
+    <span class="credits-label">Thumbnail Portfolio</span>
+    <div class="media-grid thumb-grid">
+      <div class="media-card">
+        <div class="media-card-inner thumb-ratio">
+          <img src="images/46__The_End_Is_Here.png" alt="The End Is Here">
+        </div>
+        <div class="media-caption">The End Is Here</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner thumb-ratio">
+          <img src="images/45__XO.png" alt="XO">
+        </div>
+        <div class="media-caption">XO</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner thumb-ratio">
+          <img src="images/47__Black_Blizzard.png" alt="Black Blizzard">
+        </div>
+        <div class="media-caption">Black Blizzard</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner thumb-ratio">
+          <img src="images/OFFLINE.png" alt="OFFLINE">
+        </div>
+        <div class="media-caption">OFFLINE</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner thumb-ratio">
+          <img src="images/44__The_Flawless.png" alt="The Flawless">
+        </div>
+        <div class="media-caption">The Flawless</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner thumb-ratio">
+          <img src="images/42__Bloodbath_Thumbnail_w__ExIcon.png" alt="Bloodbath">
+        </div>
+        <div class="media-caption">Bloodbath</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner thumb-ratio">
+          <img src="images/43__Auditory_Update.png" alt="Auditory Breaker">
+        </div>
+        <div class="media-caption">Auditory Breaker</div>
+      </div>
+      <div class="media-card">
+        <div class="media-card-inner thumb-ratio">
+          <img src="images/41__Unmei.png" alt="Unmei — Verified">
+        </div>
+        <div class="media-caption">Unmei — Verified</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-layout">
+    <div>
+      <span class="section-eyebrow reveal">Get In Touch</span>
+      <h2 class="section-title reveal">Let's Build<br>Something.</h2>
+      <p class="contact-tagline reveal">Whether you need a show mixed, a record engineered, a moment photographed, or a thumbnail designed — reach out and let's talk.</p>
+      <div class="contact-info-item reveal">
+        <span class="contact-info-icon">📍</span>
+        <div>
+          <span class="contact-info-label">Based In</span>
+          <span class="contact-info-value">Connecticut · Available Nationwide · Remote OK</span>
+        </div>
+      </div>
+      <div class="contact-info-item reveal">
+        <span class="contact-info-icon">⚡</span>
+        <div>
+          <span class="contact-info-label">Response Time</span>
+          <span class="contact-info-value">Within 24 Hours</span>
+        </div>
+      </div>
+      <div class="contact-info-item reveal">
+        <span class="contact-info-icon">🎚️</span>
+        <div>
+          <span class="contact-info-label">Live Sound via</span>
+          <span class="contact-info-value">WAV Productions LLC</span>
+        </div>
+      </div>
+      <div class="contact-info-item reveal">
+        <span class="contact-info-icon">🎛️</span>
+        <div>
+          <span class="contact-info-label">Studio via</span>
+          <span class="contact-info-value">Station West</span>
+        </div>
+      </div>
+    </div>
+    <div class="reveal">
+      <form class="contact-form" id="contact-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input type="text" class="form-input" name="first_name" placeholder="Jordan">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input type="text" class="form-input" name="last_name" placeholder="Smith">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" name="email" placeholder="you@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Service Needed</label>
+          <select class="form-select" name="service">
+            <option value="" disabled selected>Select a service...</option>
+            <option>Live Sound Engineering</option>
+            <option>Studio Engineering / Mixing</option>
+            <option>Photography</option>
+            <option>YouTube Thumbnail Design</option>
+            <option>Multiple Services</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tell Me About Your Project</label>
+          <textarea class="form-textarea" name="message" placeholder="Date, venue, vision — give me the details..."></textarea>
+        </div>
+        <button type="submit" class="form-submit">Send Inquiry →</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- LIGHTBOX -->
+<div class="lightbox-overlay" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close">✕ Close</button>
+  <img class="lightbox-img" id="lightbox-img" src="" alt="">
+  <div class="lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">JDK Studios</div>
+  <div class="footer-copy">© 2026 JDK Studios · WAV Productions LLC</div>
+  <div class="footer-links">
+    <a href="#">Instagram</a>
+    <a href="#">SoundBetter</a>
+    <a href="#">YouTube</a>
+  </div>
+</footer>
+
+<script>
+  // Cursor — uses transform: translate (GPU only, zero layout reflow)
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.transform = `translate(${mx - 5}px, ${my - 5}px)`;
+  });
+  function animateRing() {
+    rx += (mx - rx - 18) * 0.12;
+    ry += (my - ry - 18) * 0.12;
+    ring.style.transform = `translate(${rx}px, ${ry}px)`;
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => { cursor.style.width='25px'; cursor.style.height='25px'; ring.style.width='60px'; ring.style.height='60px'; });
+    el.addEventListener('mouseleave', () => { cursor.style.width='10px'; cursor.style.height='10px'; ring.style.width='36px'; ring.style.height='36px'; });
+  });
+
+  // Tabs — with deferred photo loading on first open
+  let photoLoaded = false;
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+
+    if (id === 'photo' && !photoLoaded) {
+      photoLoaded = true;
+      // Load images one at a time with staggered decode so the browser doesn't choke
+      const imgs = document.querySelectorAll('#photo-grid img[data-src]');
+      imgs.forEach((img, i) => {
+        setTimeout(() => {
+          const src = img.dataset.src;
+          const loader = new Image();
+          loader.decoding = 'async';
+          loader.onload = () => { img.src = src; img.style.opacity = '1'; };
+          loader.src = src;
+        }, i * 120);
+      });
+    }
+  }
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) setTimeout(() => entry.target.classList.add('visible'), i * 80);
+    });
+  }, { threshold: 0.08 });
+  reveals.forEach(el => observer.observe(el));
+
+  // Lightbox — opens overlay instantly, loads image in background then fades in
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxCaption = document.getElementById('lightbox-caption');
+  const lightboxClose = document.getElementById('lightbox-close');
+
+  function openLightbox(src, caption) {
+    lightboxCaption.textContent = caption || '';
+    lightboxImg.style.opacity = '0';
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    const loader = new Image();
+    loader.decoding = 'async';
+    loader.onload = () => {
+      lightboxImg.src = src;
+      lightboxImg.style.transition = 'opacity 0.3s ease';
+      lightboxImg.style.opacity = '1';
+    };
+    loader.src = src;
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('active');
+    lightboxImg.src = '';
+    lightboxImg.style.opacity = '0';
+    document.body.style.overflow = '';
+  }
+
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  // Make partnership logos clickable
+  document.querySelectorAll('.partnership-logo img').forEach(img => {
+    img.addEventListener('click', function() {
+      const caption = this.closest('.partnership-logo')?.dataset.caption || this.alt;
+      openLightbox(this.src, caption);
+    });
+  });
+
+  // Make all media card images clickable
+  document.querySelectorAll('.media-card img').forEach(img => {
+    img.style.cursor = 'none';
+    img.addEventListener('click', function() {
+      const card = this.closest('.media-card');
+      const caption = card?.dataset.caption || card?.querySelector('.media-caption')?.textContent || this.alt;
+      openLightbox(this.src, caption);
+    });
+  });
+
+  // Also handle clicks on lightbox-trigger cards directly
+  document.querySelectorAll('.media-card.lightbox-trigger').forEach(card => {
+    card.addEventListener('click', function(e) {
+      if (e.target.tagName === 'IMG') return; // already handled above
+      const img = this.querySelector('img');
+      if (img) {
+        const caption = this.dataset.caption || this.querySelector('.media-caption')?.textContent || img.alt;
+        openLightbox(img.src, caption);
+      }
+    });
+  });
+
+  // About photo clickable
+  const aboutImg = document.querySelector('.about-frame img');
+  if (aboutImg) {
+    aboutImg.addEventListener('click', function() {
+      openLightbox(this.src, 'DJ JDK');
+    });
+  }
+
+
+  const contactForm = document.getElementById('contact-form');
+  contactForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(contactForm);
+    const data = {};
+    formData.forEach((value, key) => { data[key] = value; });
+    try {
+      const response = await fetch('https://formspree.io/f/mojprjgd', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      const result = await response.json();
+      console.log('Formspree response:', response.status, result);
+      if (response.ok) {
+        contactForm.innerHTML = '<p style="font-family:\'Cormorant Garamond\',serif;font-style:italic;font-size:1.2rem;color:var(--blue);padding:20px 0;">Message received — I\'ll be in touch within 24 hours.</p>';
+      } else {
+        contactForm.innerHTML = '<p style="font-size:0.75rem;color:#c0392b;padding:20px 0;">Error ' + response.status + ': ' + (result.error || JSON.stringify(result)) + '</p>';
+      }
+    } catch(err) {
+      console.error('Form error:', err);
+      contactForm.innerHTML = '<p style="font-size:0.75rem;color:#c0392b;padding:20px 0;">Network error: ' + err.message + '</p>';
+    }
+  });
+</script>
+</body>
+</html>
