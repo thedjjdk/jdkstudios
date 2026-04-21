@@ -623,10 +623,37 @@
     transition: opacity 0.8s;
 }
 
+/* Resize handle (Win95-style corner grip) */
+.resize-handle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 14px;
+    height: 14px;
+    cursor: se-resize;
+    z-index: 10;
+    background:
+        linear-gradient(135deg, transparent 40%, #808080 40%, #808080 45%, #fff 45%, #fff 50%, transparent 50%),
+        linear-gradient(135deg, transparent 60%, #808080 60%, #808080 65%, #fff 65%, #fff 70%, transparent 70%),
+        linear-gradient(135deg, transparent 80%, #808080 80%, #808080 85%, #fff 85%);
+    touch-action: none;
+}
+
 /* Mobile responsive overrides */
 @media (max-width: 767px) {
     .window {
         max-width: calc(100vw - 16px) !important;
+    }
+
+    .window-header {
+        min-height: 36px;
+        padding: 4px 5px;
+        font-size: 17px;
+    }
+
+    .resize-handle {
+        width: 26px;
+        height: 26px;
     }
 
     .search-container {
@@ -707,21 +734,6 @@
     <span>2048</span>
 </div>
 
-<!-- The 2048 Window -->
-<div class="window" id="win2048" style="top: 150px; left: 400px; width: 280px;">
-    <div class="window-header">
-        <span>2048 Retro</span>
-        <button class="close-btn" onclick="closeWindow('win2048')">X</button>
-    </div>
-    <div class="menu-bar">
-        <span onclick="init2048()">Restart</span><span>Help</span>
-    </div>
-    <div class="window-content" style="text-align: center; background: #c0c0c0;">
-        <div class="grid2048" id="g2048" style="margin: 10px auto;"></div>
-        <p style="margin: 5px 0 0 0; font-size: 18px;">Use Arrow Keys to slide</p>
-    </div>
-</div>
-
         <div class="desktop-icon" onclick="selectDesktopIcon(this)" ondblclick="openWindow('minesweeperWindow'); initMinesweeper();">
             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjYzBjMGMwIiBzdHJva2U9IiM4MDgwODAiIHN0cm9rZS13aWR0aD0iMiIvPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjYiIGZpbGw9IiMwMDAiLz48cGF0aCBkPSJNMTYgNnY0TTE2IDIydjRNMTAgMTZoLTRNMjYgMTZoLTRNMTIgMTJsLTMtM00yMyAyM2wtMy0zTTEyIDIwbC0zIDNNMjMgOWwtMyAzIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==" alt="Minesweeper">
             <span>Minesweeper</span>
@@ -754,6 +766,21 @@
         <div class="desktop-icon" onclick="selectDesktopIcon(this)">
             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBvbHlnb24gcG9pbnRzPSI0LDYgMjgsNiAxNiwyOCIgZmlsbD0iI2ZmOGMwMCIvPjwvc3ZnPg==" alt="Hitfilm">
             <span>Hitfilm</span>
+        </div>
+    </div>
+
+    <!-- 2048 Window (outside .desktop so overflow:hidden doesn't clip the grid) -->
+    <div class="window" id="win2048" style="top: 150px; left: 400px; width: 280px;">
+        <div class="window-header">
+            <span>2048 Retro</span>
+            <button class="close-btn" onclick="closeWindow('win2048')">X</button>
+        </div>
+        <div class="menu-bar">
+            <span onclick="init2048()">Restart</span><span>Help</span>
+        </div>
+        <div class="window-content" style="text-align: center; background: #c0c0c0;">
+            <div class="grid2048" id="g2048" style="margin: 10px auto;"></div>
+            <p style="margin: 5px 0 0 0; font-size: 18px;">Use Arrow Keys to slide</p>
         </div>
     </div>
 
@@ -1404,72 +1431,62 @@
 
         // --- Draggable Windows Logic ---
         document.querySelectorAll('.window-header').forEach(header => {
-            header.onmousedown = dragMouseDown;
-            header.addEventListener('touchstart', dragTouchStart, { passive: false });
             const win = header.parentElement;
-            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-            function dragMouseDown(e) {
-                if(e.target.closest('.close-btn')) return;
-                e.preventDefault();
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
-                win.style.zIndex = ++zIndexCounter;
+            function applyDrag(newTop, newLeft) {
+                if (newTop < 0) newTop = 0;
+                win.style.top = newTop + 'px';
+                win.style.left = newLeft + 'px';
             }
 
-            function elementDrag(e) {
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-
+            function clearTransform() {
                 if (win.style.transform && win.style.transform.includes('translate')) {
                     win.style.transform = 'none';
                 }
-
-                let newTop = win.offsetTop - pos2;
-                let newLeft = win.offsetLeft - pos1;
-                if (newTop < 0) newTop = 0;
-                win.style.top = newTop + "px";
-                win.style.left = newLeft + "px";
             }
 
-            function closeDragElement() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-                document.removeEventListener('touchmove', elementTouchDrag);
-            }
-
-            function dragTouchStart(e) {
+            // Mouse drag
+            header.onmousedown = function(e) {
                 if (e.target.closest('.close-btn')) return;
                 e.preventDefault();
-                pos3 = e.touches[0].clientX;
-                pos4 = e.touches[0].clientY;
+                clearTransform();
                 win.style.zIndex = ++zIndexCounter;
-                document.addEventListener('touchmove', elementTouchDrag, { passive: false });
-                document.addEventListener('touchend', closeDragElement, { once: true });
-            }
+                let lastX = e.clientX, lastY = e.clientY;
 
-            function elementTouchDrag(e) {
-                e.preventDefault();
-                pos1 = pos3 - e.touches[0].clientX;
-                pos2 = pos4 - e.touches[0].clientY;
-                pos3 = e.touches[0].clientX;
-                pos4 = e.touches[0].clientY;
-
-                if (win.style.transform && win.style.transform.includes('translate')) {
-                    win.style.transform = 'none';
+                function onMove(e) {
+                    applyDrag(win.offsetTop + (e.clientY - lastY), win.offsetLeft + (e.clientX - lastX));
+                    lastX = e.clientX;
+                    lastY = e.clientY;
                 }
+                function onUp() {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                }
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+            };
 
-                let newTop = win.offsetTop - pos2;
-                let newLeft = win.offsetLeft - pos1;
-                if (newTop < 0) newTop = 0;
-                win.style.top = newTop + "px";
-                win.style.left = newLeft + "px";
-            }
+            // Touch drag — fresh local functions per gesture, no shared state
+            header.addEventListener('touchstart', function(e) {
+                if (e.target.closest('.close-btn')) return;
+                e.preventDefault();
+                clearTransform();
+                win.style.zIndex = ++zIndexCounter;
+                let lastX = e.touches[0].clientX, lastY = e.touches[0].clientY;
+
+                function onMove(e) {
+                    e.preventDefault();
+                    const cx = e.touches[0].clientX, cy = e.touches[0].clientY;
+                    applyDrag(win.offsetTop + (cy - lastY), win.offsetLeft + (cx - lastX));
+                    lastX = cx;
+                    lastY = cy;
+                }
+                function onEnd() {
+                    document.removeEventListener('touchmove', onMove);
+                }
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend', onEnd, { once: true });
+            }, { passive: false });
         });
 
         // --- Initialize and Snap-Drag Desktop Icons (ANTI-OVERLAP & RECYCLE BIN) ---
@@ -1494,7 +1511,41 @@
                     startX += gridX;
                 }
 
-                if (isMobile()) return; // Touch devices: tap/double-tap works without drag setup
+                if (isMobile()) {
+                    // Single tap = select + open; touch drag = reposition icon
+                    let tStartX = 0, tStartY = 0, tLastX = 0, tLastY = 0;
+                    let tStartLeft = 0, tStartTop = 0, tDragged = false;
+
+                    icon.addEventListener('touchstart', function(e) {
+                        tStartX = tLastX = e.touches[0].clientX;
+                        tStartY = tLastY = e.touches[0].clientY;
+                        tStartLeft = parseInt(icon.style.left, 10) || 0;
+                        tStartTop  = parseInt(icon.style.top,  10) || 0;
+                        tDragged = false;
+                    }, { passive: true });
+
+                    icon.addEventListener('touchmove', function(e) {
+                        tLastX = e.touches[0].clientX;
+                        tLastY = e.touches[0].clientY;
+                        const dx = tLastX - tStartX, dy = tLastY - tStartY;
+                        if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+                            tDragged = true;
+                            e.preventDefault();
+                            icon.style.left = Math.max(0, Math.min(tStartLeft + dx, window.innerWidth  - icon.offsetWidth))  + 'px';
+                            icon.style.top  = Math.max(0, Math.min(tStartTop  + dy, window.innerHeight - 40 - icon.offsetHeight)) + 'px';
+                        }
+                    }, { passive: false });
+
+                    icon.addEventListener('touchend', function(e) {
+                        if (!tDragged) {
+                            e.preventDefault(); // block the synthetic click
+                            selectDesktopIcon(icon);
+                            if (typeof icon.ondblclick === 'function') icon.ondblclick();
+                        }
+                    }, { passive: false });
+
+                    return;
+                }
 
                 icon.onmousedown = function(e) {
                     let pos1 = 0, pos2 = 0, pos3 = e.clientX, pos4 = e.clientY;
@@ -1607,9 +1658,48 @@
 
         window.addEventListener('resize', clampElements);
         
+        // --- Resize Handles ---
+        function addResizeHandles() {
+            const MIN_W = 200, MIN_H = 80;
+            document.querySelectorAll('.window').forEach(win => {
+                const handle = document.createElement('div');
+                handle.className = 'resize-handle';
+                win.appendChild(handle);
+
+                function beginResize(cx, cy) {
+                    return { cx, cy, w: win.offsetWidth, h: win.offsetHeight };
+                }
+                function doResize(start, cx, cy) {
+                    win.style.width  = Math.max(MIN_W, start.w + (cx - start.cx)) + 'px';
+                    win.style.height = Math.max(MIN_H, start.h + (cy - start.cy)) + 'px';
+                }
+
+                handle.addEventListener('mousedown', function(e) {
+                    e.preventDefault(); e.stopPropagation();
+                    win.style.zIndex = ++zIndexCounter;
+                    const start = beginResize(e.clientX, e.clientY);
+                    function onMove(e) { doResize(start, e.clientX, e.clientY); }
+                    function onUp()   { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
+                });
+
+                handle.addEventListener('touchstart', function(e) {
+                    e.preventDefault(); e.stopPropagation();
+                    win.style.zIndex = ++zIndexCounter;
+                    const start = beginResize(e.touches[0].clientX, e.touches[0].clientY);
+                    function onMove(e) { e.preventDefault(); doResize(start, e.touches[0].clientX, e.touches[0].clientY); }
+                    function onEnd()  { document.removeEventListener('touchmove', onMove); }
+                    document.addEventListener('touchmove', onMove, { passive: false });
+                    document.addEventListener('touchend', onEnd, { once: true });
+                }, { passive: false });
+            });
+        }
+
         window.onload = function() {
             populateAggregators();
             initDesktopIcons();
+            addResizeHandles();
         }
 
         // --- MINESWEEPER LOGIC ---
