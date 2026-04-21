@@ -573,15 +573,89 @@
     border-bottom: 2px solid #fff;
 }
 
-.cell2048 { 
-    background: #cdc1b4; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    font-weight: bold; 
-    color: #776e65; 
-    font-size: 24px; 
+.cell2048 {
+    background: #cdc1b4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #776e65;
+    font-size: 24px;
     font-family: sans-serif;
+}
+
+/* Notepad content area */
+.notepad-textarea {
+    background: white;
+    border: 2px solid #808080;
+    border-right-color: #fff;
+    border-bottom-color: #fff;
+    flex-grow: 1;
+    padding: 8px;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-family: 'Courier New', Courier, monospace;
+    color: #000;
+}
+
+/* Mobile detected toast */
+#mobile-toast {
+    display: none;
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000080;
+    color: white;
+    border-top: 2px solid #fff;
+    border-left: 2px solid #fff;
+    border-right: 2px solid #808080;
+    border-bottom: 2px solid #808080;
+    padding: 10px 18px;
+    font-size: 18px;
+    z-index: 99999;
+    text-align: center;
+    max-width: calc(100vw - 40px);
+    font-family: 'VT323', monospace;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+    transition: opacity 0.8s;
+}
+
+/* Mobile responsive overrides */
+@media (max-width: 767px) {
+    .window {
+        max-width: calc(100vw - 16px) !important;
+    }
+
+    .search-container {
+        display: none !important;
+    }
+
+    .start-btn {
+        font-size: 14px;
+        padding: 0 6px;
+    }
+
+    .system-tray {
+        font-size: 14px;
+        padding: 0 6px;
+    }
+
+    .grid2048 {
+        width: min(240px, 80vw) !important;
+        height: min(240px, 80vw) !important;
+    }
+
+    .desktop-icon span {
+        font-size: 14px;
+    }
+
+    .menu-bar {
+        font-size: 14px;
+        gap: 8px;
+    }
 }
 
     </style>
@@ -589,6 +663,7 @@
 <body>
 
 	<div id="selection-box"></div>
+    <div id="mobile-toast">Mobile detected — tap icons to open, swipe to play 2048, tap to jump in Dino. Long-press Minesweeper cells to flag.</div>
 
     <div class="desktop" id="desktopArea">
         
@@ -786,7 +861,7 @@
                     <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTQgNGgyMHYyNEg0eiIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBkPSJNNCA0aDIwdjI0SDR6Ii8+PHBhdGggc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIiIGQ9Ik04IDEwaDEydjJIOHptMCA2aDEydjJIOHptMCA2aDEwdjJIOHoiLz48L3N2Zz4=" alt="Text File">
                     <span>bio.txt</span>
                 </div>
-                <div class="explorer-icon doc-item" onclick="selectExplorerIcon(this)" ondblclick="openDynamicImage('me.jpg', 'photo.jpg')">
+                <div class="explorer-icon doc-item" onclick="selectExplorerIcon(this)" ondblclick="openDynamicImage('images/PXL_20251119_050858109_4.jpg', 'photo.jpg')">
                     <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTQgNGgyNHYyNEg0eiIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBkPSJNNCA0aDI0djI0SDR6Ii8+PHBhdGggZmlsbD0iIzA5MCIgZD0iTTQgMjBsaC00IDgtOHYxMkg0eiIvPjxwYXRoIGZpbGw9IiMwMDkiIGQ9Ik0xNiAyNGw4LTEwIDQgMTBoLTEyeiIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMTAiIHI9IjMiIGZpbGw9IiNmZjAiLz48L3N2Zz4=" alt="Image File">
                     <span>photo.jpg</span>
                 </div>
@@ -1055,6 +1130,11 @@
     </div>
 
     <script>
+        // Mobile detection helper used throughout
+        function isMobile() {
+            return navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches;
+        }
+
         // --- Populate Global Files Dynamically ---
         const imgIconSvg = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTQgNGgyNHYyNEg0eiIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBkPSJNNCA0aDI0djI0SDR6Ii8+PHBhdGggZmlsbD0iIzA5MCIgZD0iTTQgMjBsaC00IDgtOHYxMkg0eiIvPjxwYXRoIGZpbGw9IiMwMDkiIGQ9Ik0xNiAyNGw4LTEwIDQgMTBoLTEyeiIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMTAiIHI9IjMiIGZpbGw9IiNmZjAiLz48L3N2Zz4=`;
         
@@ -1065,24 +1145,24 @@
                 let div = document.createElement('div');
                 div.className = 'explorer-icon doc-item';
                 div.onclick = function() { selectExplorerIcon(this); };
-                div.ondblclick = function() { openDynamicImage(file, file); };
-                
+                div.ondblclick = function() { openDynamicImage('images/' + file, file); };
+
                 let img = document.createElement('img');
                 img.src = imgIconSvg;
-                
+
                 let span = document.createElement('span');
-                span.innerText = file.length > 15 ? file.substring(0,10) + '...jpg' : file;
-                
+                span.innerText = file.length > 15 ? file.substring(0, 10) + '...' : file;
+
                 div.appendChild(img);
                 div.appendChild(span);
                 container.appendChild(div);
             });
         }
 
-        const liveSoundFiles = ['IMG_4612.jpg', 'IMG_4614.jpg', 'IMG_4618.jpg', 'IMG_4620.jpg', 'IMG_4623.jpg', 'IMG_4644.jpg', 'IMG_4646.jpg', 'IMG_4647.jpg', 'IMG_4649.jpg', 'IMG_4652.jpg'];
-        const studioFiles = ['ace_turk.jpg', 'cowboy.jpg', 'trippy.jpg', 'question.jpg', 'glitch.jpg'];
-        const thumbnailFiles = ['41__Unmei.jpg', '42__Bloodbath_Thumbnail_w__ExIcon.jpg', '43__Auditory_Update.jpg', '44__The_Flawless.jpg', '45__XO.jpg', '46__The_End_Is_Here.jpg', '47__Black_Blizzard.jpg', 'OFFLINE.jpg'];
-        const photoFiles = ['PXL_20251119_050858109_4.jpg'];
+        const liveSoundFiles = ['IMG_4614.jpg', 'IMG_4618.jpg', 'IMG_4652.jpg', 'IMG_4713.jpg', 'PulseBand.jpg', 'Ballards.jpg', 'stationwest.jpg'];
+        const studioFiles = ['1226073-heaven-can-wait_212351.jpg', '1226150-modern-day-cowboy_222251.jpg', 'ab67616d0000b2732dd42130be249b697264719c.jpeg', 'ThisIsMe_NEWDELUXE.png'];
+        const thumbnailFiles = ['41__Unmei.png', '42__Bloodbath_Thumbnail_w__ExIcon.png', '43__Auditory_Update.png', '44__The_Flawless.png', '45__XO.png', '46__The_End_Is_Here.png', '47__Black_Blizzard.png', 'OFFLINE.png'];
+        const photoFiles = ['PXL_20251119_050858109_4.jpg', 'PXL_20260219_165242551_LONG_EXPOSURE-01_COVER.jpg', '1BTrain.jpg', '2BTrain.jpg', '3BTrain.jpg', '4BTrain.jpg', '5BTrain.jpg', '6BTrain.jpg'];
 
         injectFiles('liveSoundFolder', liveSoundFiles);
         injectFiles('studioFolder', studioFiles);
@@ -1297,6 +1377,14 @@
             if(!win) return;
             win.style.display = 'flex';
             win.style.zIndex = ++zIndexCounter;
+
+            // On mobile: clear any CSS transform and position near top-left so window is reachable
+            if (isMobile()) {
+                if (win.style.transform) win.style.transform = 'none';
+                win.style.top = '50px';
+                win.style.left = '8px';
+            }
+
             document.querySelectorAll('.desktop > .desktop-icon').forEach(icon => icon.classList.remove('selected'));
         }
 
@@ -1317,6 +1405,7 @@
         // --- Draggable Windows Logic ---
         document.querySelectorAll('.window-header').forEach(header => {
             header.onmousedown = dragMouseDown;
+            header.addEventListener('touchstart', dragTouchStart, { passive: false });
             const win = header.parentElement;
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
@@ -1336,16 +1425,14 @@
                 pos2 = pos4 - e.clientY;
                 pos3 = e.clientX;
                 pos4 = e.clientY;
-                
-                if (win.style.transform.includes('translate')) {
+
+                if (win.style.transform && win.style.transform.includes('translate')) {
                     win.style.transform = 'none';
                 }
 
                 let newTop = win.offsetTop - pos2;
                 let newLeft = win.offsetLeft - pos1;
-
                 if (newTop < 0) newTop = 0;
-                
                 win.style.top = newTop + "px";
                 win.style.left = newLeft + "px";
             }
@@ -1353,6 +1440,35 @@
             function closeDragElement() {
                 document.onmouseup = null;
                 document.onmousemove = null;
+                document.removeEventListener('touchmove', elementTouchDrag);
+            }
+
+            function dragTouchStart(e) {
+                if (e.target.closest('.close-btn')) return;
+                e.preventDefault();
+                pos3 = e.touches[0].clientX;
+                pos4 = e.touches[0].clientY;
+                win.style.zIndex = ++zIndexCounter;
+                document.addEventListener('touchmove', elementTouchDrag, { passive: false });
+                document.addEventListener('touchend', closeDragElement, { once: true });
+            }
+
+            function elementTouchDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.touches[0].clientX;
+                pos2 = pos4 - e.touches[0].clientY;
+                pos3 = e.touches[0].clientX;
+                pos4 = e.touches[0].clientY;
+
+                if (win.style.transform && win.style.transform.includes('translate')) {
+                    win.style.transform = 'none';
+                }
+
+                let newTop = win.offsetTop - pos2;
+                let newLeft = win.offsetLeft - pos1;
+                if (newTop < 0) newTop = 0;
+                win.style.top = newTop + "px";
+                win.style.left = newLeft + "px";
             }
         });
 
@@ -1377,6 +1493,8 @@
                     startY = 10;
                     startX += gridX;
                 }
+
+                if (isMobile()) return; // Touch devices: tap/double-tap works without drag setup
 
                 icon.onmousedown = function(e) {
                     let pos1 = 0, pos2 = 0, pos3 = e.clientX, pos4 = e.clientY;
@@ -1533,6 +1651,14 @@
                     
                     cell.oncontextmenu = (e) => { e.preventDefault(); flagMsCell(r, c); };
                     cell.onclick = () => revealMsCell(r, c);
+
+                    // Long-press to flag on touch devices
+                    let msLongPress = null;
+                    cell.addEventListener('touchstart', () => {
+                        msLongPress = setTimeout(() => { flagMsCell(r, c); msLongPress = null; }, 500);
+                    }, { passive: true });
+                    cell.addEventListener('touchend', () => { if (msLongPress) { clearTimeout(msLongPress); msLongPress = null; } });
+                    cell.addEventListener('touchmove', () => { if (msLongPress) { clearTimeout(msLongPress); msLongPress = null; } });
                     
                     gridEl.appendChild(cell);
                     row.push({ el: cell, mine: false, revealed: false, flagged: false, count: 0 });
@@ -1665,6 +1791,7 @@
             const canvas = document.getElementById('dinoCanvas');
             dinoCtx = canvas.getContext('2d');
             canvas.onmousedown = dinoJump;
+            canvas.ontouchstart = function(e) { e.preventDefault(); dinoJump(); };
             
             dinoState = {
                 dinoY: 80, 
@@ -2020,9 +2147,9 @@ window.addEventListener('keydown', (e) => {
         for (let r = 0; r < 4; r++) {
             let row = grid2048.slice(r * 4, r * 4 + 4);
             if (e.key === 'ArrowRight') row.reverse();
-            
+
             let newRow = slideRow2048(row);
-            
+
             if (e.key === 'ArrowRight') newRow.reverse();
             for (let c = 0; c < 4; c++) {
                 if (grid2048[r * 4 + c] !== newRow[c]) moved = true;
@@ -2033,9 +2160,9 @@ window.addEventListener('keydown', (e) => {
         for (let c = 0; c < 4; c++) {
             let col = [grid2048[c], grid2048[c + 4], grid2048[c + 8], grid2048[c + 12]];
             if (e.key === 'ArrowDown') col.reverse();
-            
+
             let newCol = slideRow2048(col);
-            
+
             if (e.key === 'ArrowDown') newCol.reverse();
             for (let r = 0; r < 4; r++) {
                 if (grid2048[r * 4 + c] !== newCol[r]) moved = true;
@@ -2045,11 +2172,42 @@ window.addEventListener('keydown', (e) => {
     }
 
     if (moved) {
-        e.preventDefault(); // Stop window from scrolling
+        e.preventDefault();
         addRandomTile2048();
         draw2048();
     }
 });
+
+// Touch swipe support for 2048
+let t2048X = 0, t2048Y = 0;
+document.getElementById('win2048').addEventListener('touchstart', function(e) {
+    t2048X = e.touches[0].clientX;
+    t2048Y = e.touches[0].clientY;
+}, { passive: true });
+document.getElementById('win2048').addEventListener('touchend', function(e) {
+    const win = document.getElementById('win2048');
+    if (!win || win.style.display === 'none') return;
+    const dx = e.changedTouches[0].clientX - t2048X;
+    const dy = e.changedTouches[0].clientY - t2048Y;
+    if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
+    let key;
+    if (Math.abs(dx) > Math.abs(dy)) {
+        key = dx > 0 ? 'ArrowRight' : 'ArrowLeft';
+    } else {
+        key = dy > 0 ? 'ArrowDown' : 'ArrowUp';
+    }
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
+}, { passive: true });
+
+// Mobile detection — show toast and adjust behavior
+if (isMobile()) {
+    const toast = document.getElementById('mobile-toast');
+    toast.style.display = 'block';
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => { toast.style.display = 'none'; }, 800);
+    }, 5000);
+}
     </script>
 </body>
 </html>
