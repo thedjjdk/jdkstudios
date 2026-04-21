@@ -79,6 +79,39 @@
   }
   .nav-links a:hover { color: var(--blue); }
 
+  /* HAMBURGER */
+  .nav-hamburger {
+    display: none; flex-direction: column; gap: 5px;
+    background: none; border: none; padding: 4px; cursor: pointer;
+  }
+  .nav-hamburger span {
+    display: block; width: 24px; height: 2px;
+    background: var(--blue); transition: transform 0.3s, opacity 0.3s;
+  }
+  .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+  .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .nav-dropdown {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 999; background: rgba(6,8,16,0.97);
+    flex-direction: column; align-items: center; justify-content: center; gap: 40px;
+    opacity: 0; transition: opacity 0.3s ease;
+  }
+  .nav-dropdown.open { display: flex; }
+  .nav-dropdown.visible { opacity: 1; }
+  .nav-dropdown a {
+    font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem;
+    letter-spacing: 0.12em; color: var(--ash); text-decoration: none;
+    transition: color 0.3s;
+  }
+  .nav-dropdown a:hover { color: var(--blue); }
+
+  @media (max-width: 900px) {
+    .nav-links { display: none; }
+    .nav-hamburger { display: flex; }
+  }
+
   /* HERO */
   .hero {
     position: relative; min-height: 100vh;
@@ -419,7 +452,19 @@
     <li><a href="#contact">Contact</a></li>
     <li><a href="desktop-view.html">Desktop</a></li>
   </ul>
+  <button class="nav-hamburger" id="navHamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+<!-- MOBILE DROPDOWN -->
+<div class="nav-dropdown" id="navDropdown">
+  <a href="#" onclick="navigateTo(event, '#')">Home</a>
+  <a href="#about" onclick="navigateTo(event, '#about')">About</a>
+  <a href="#work" onclick="navigateTo(event, '#work')">Work</a>
+  <a href="#contact" onclick="navigateTo(event, '#contact')">Contact</a>
+  <a href="desktop-view.html" onclick="navigateTo(event, 'desktop-view.html')">Desktop</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -931,6 +976,44 @@
     document.querySelectorAll('a, button').forEach(el => {
       el.addEventListener('mouseenter', () => { cursor.style.width='25px'; cursor.style.height='25px'; ring.style.width='60px'; ring.style.height='60px'; });
       el.addEventListener('mouseleave', () => { cursor.style.width='10px'; cursor.style.height='10px'; ring.style.width='36px'; ring.style.height='36px'; });
+    });
+  }
+
+  // Hamburger menu
+  const hamburger = document.getElementById('navHamburger');
+  const dropdown = document.getElementById('navDropdown');
+
+  hamburger.addEventListener('click', () => {
+    const isOpen = dropdown.classList.contains('open');
+    if (isOpen) {
+      closeMenu();
+    } else {
+      hamburger.classList.add('open');
+      dropdown.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => dropdown.classList.add('visible'));
+    }
+  });
+
+  function closeMenu(callback) {
+    dropdown.classList.remove('visible');
+    hamburger.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => {
+      dropdown.classList.remove('open');
+      if (callback) callback();
+    }, 300);
+  }
+
+  function navigateTo(e, target) {
+    e.preventDefault();
+    closeMenu(() => {
+      if (target.startsWith('#')) {
+        const el = target === '#' ? document.body : document.querySelector(target);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.location.href = target;
+      }
     });
   }
 
