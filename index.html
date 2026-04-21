@@ -25,7 +25,14 @@
     color: var(--white);
     font-family: 'DM Mono', monospace;
     overflow-x: hidden;
-    cursor: none;
+  }
+  /* Custom cursor only on devices that support hover (non-touch) */
+  @media (hover: hover) and (pointer: fine) {
+    body, a, button, .btn-primary, .btn-ghost, .tab-btn, .form-submit, .edit-card, .media-card, .media-card img, .lightbox-overlay, .lightbox-close, .lightbox-trigger { cursor: none; }
+    .cursor, .cursor-ring { display: block; }
+  }
+  @media (hover: none), (pointer: coarse) {
+    .cursor, .cursor-ring { display: none !important; }
   }
 
   /* CURSOR */
@@ -87,8 +94,9 @@
   .hero-bg-photo {
     position: absolute; inset: 0; z-index: -1;
     background-image: url('images/IMG_5040__1_.jpg');
-    background-size: 160%;
-    background-position: 20% 20%;
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
     filter: saturate(0.15) brightness(0.7) sepia(0.5) hue-rotate(175deg) saturate(2.5);
     opacity: 0;
     animation: fadeIn 2s 0.3s ease forwards;
@@ -387,6 +395,12 @@
     .form-row { grid-template-columns: 1fr; }
     footer { flex-direction: column; gap: 16px; text-align: center; }
     .hero-scroll { display: none; }
+    /* Single-column image grids on narrow screens */
+    .media-grid,
+    .media-grid.photo-grid,
+    .media-grid.thumb-grid { grid-template-columns: 1fr; }
+    .media-grid .media-card-inner,
+    .media-grid.photo-grid .media-card-inner { aspect-ratio: 16/9; }
   }
 </style>
 </head>
@@ -896,25 +910,29 @@
 </footer>
 
 <script>
-  // Cursor — uses transform: translate (GPU only, zero layout reflow)
+  // Cursor — only on non-touch devices
   const cursor = document.getElementById('cursor');
   const ring = document.getElementById('cursorRing');
-  let mx = 0, my = 0, rx = 0, ry = 0;
-  document.addEventListener('mousemove', e => {
-    mx = e.clientX; my = e.clientY;
-    cursor.style.transform = `translate(${mx - 5}px, ${my - 5}px)`;
-  });
-  function animateRing() {
-    rx += (mx - rx - 18) * 0.12;
-    ry += (my - ry - 18) * 0.12;
-    ring.style.transform = `translate(${rx}px, ${ry}px)`;
-    requestAnimationFrame(animateRing);
+  const isTouch = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+
+  if (!isTouch) {
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cursor.style.transform = `translate(${mx - 5}px, ${my - 5}px)`;
+    });
+    function animateRing() {
+      rx += (mx - rx - 18) * 0.12;
+      ry += (my - ry - 18) * 0.12;
+      ring.style.transform = `translate(${rx}px, ${ry}px)`;
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+    document.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('mouseenter', () => { cursor.style.width='25px'; cursor.style.height='25px'; ring.style.width='60px'; ring.style.height='60px'; });
+      el.addEventListener('mouseleave', () => { cursor.style.width='10px'; cursor.style.height='10px'; ring.style.width='36px'; ring.style.height='36px'; });
+    });
   }
-  animateRing();
-  document.querySelectorAll('a, button').forEach(el => {
-    el.addEventListener('mouseenter', () => { cursor.style.width='25px'; cursor.style.height='25px'; ring.style.width='60px'; ring.style.height='60px'; });
-    el.addEventListener('mouseleave', () => { cursor.style.width='10px'; cursor.style.height='10px'; ring.style.width='36px'; ring.style.height='36px'; });
-  });
 
   // Tabs — with deferred photo loading on first open
   let photoLoaded = false;
