@@ -1165,6 +1165,53 @@
         // --- Populate Global Files Dynamically ---
         const imgIconSvg = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTQgNGgyNHYyNEg0eiIvPjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBkPSJNNCA0aDI0djI0SDR6Ii8+PHBhdGggZmlsbD0iIzA5MCIgZD0iTTQgMjBsaC00IDgtOHYxMkg0eiIvPjxwYXRoIGZpbGw9IiMwMDkiIGQ9Ik0xNiAyNGw4LTEwIDQgMTBoLTEyeiIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMTAiIHI9IjMiIGZpbGw9IiNmZjAiLz48L3N2Zz4=`;
         
+        // Human-readable display names for every file shown in the explorer
+        const fileLabels = {
+            // Live Sound
+            'NorthCounty.jpeg':    'North County',
+            'PulseBand.jpg':       'Pulse',
+            'DanburyElicit.webp':  'Elicit – Danbury',
+            'FairfieldElicit.webp':'Elicit – Fairfield',
+            'WoodburyBrewing.webp':'Woodbury Brewing',
+            'Ballards.jpg':        "Ballard's – Block Island",
+            'WAV_Logo.jpg':        'WAV Productions',
+            // Studio
+            '1226150-modern-day-cowboy_222251.jpg':               'Modern Day Cowboy',
+            '1226073-heaven-can-wait_212351.jpg':                 'Heaven Can Wait',
+            'ab67616d0000b2732dd42130be249b697264719c.jpeg':       'Everything I Look For',
+            'ThisIsMe_NEWDELUXE.png':                             "WHO I'VE BECOME",
+            'Gemini_Generated_Image_mxacvzmxacvzmxac.png':        '? – Coming Soon',
+            'Screenshot_20250924-132949.png':                     'Station West Session',
+            'stationwest.jpg':                                    'Station West',
+            // Photography
+            'IMG_4145.jpg':        'Rockefeller Center',
+            'IMG_4410.jpg':        'Portrait – Hillside',
+            'IMG_4450.jpg':        'Portrait – Woods',
+            'IMG_4462.jpg':        'Stafford HS – Abandoned',
+            'IMG_5058__3_.jpg':    'Portrait – Bridge',
+            'IMG_5069.jpg':        'Portrait – Dam',
+            'PXL_20260219_165242551_LONG_EXPOSURE-01_COVER.jpg': 'New Orleans – Long Exposure',
+            'IMG_4618.jpg':        '100 Proof – Live',
+            'IMG_4652.jpg':        'Drummer – Live',
+            'B_Logo.png':          'B Train Foamer Logo',
+            // B Train
+            '1BTrain.jpg': 'Cyclone',
+            '2BTrain.jpg': 'Rare Find',
+            '3BTrain.jpg': 'Q Train',
+            '4BTrain.jpg': '2199 Sunset',
+            '5BTrain.jpg': 'Sí',
+            '6BTrain.jpg': 'Panned Train',
+            // Thumbnails
+            '41__Unmei.png':                         'Unmei — Verified',
+            '42__Bloodbath_Thumbnail_w__ExIcon.png': 'Bloodbath',
+            '43__Auditory_Update.png':               'Auditory Breaker',
+            '44__The_Flawless.png':                  'The Flawless',
+            '45__XO.png':                            'XO',
+            '46__The_End_Is_Here.png':               'The End Is Here',
+            '47__Black_Blizzard.png':                'Black Blizzard',
+            'OFFLINE.png':                           'OFFLINE',
+        };
+
         function injectFiles(containerId, fileArray) {
             const container = document.querySelector(`#${containerId} .explorer-view`);
             if(!container) return;
@@ -1172,13 +1219,13 @@
                 let div = document.createElement('div');
                 div.className = 'explorer-icon doc-item';
                 div.onclick = function() { selectExplorerIcon(this); };
-                div.ondblclick = function() { openDynamicImage('images/' + file, file); };
+                div.ondblclick = function() { openDynamicImage('images/' + file, fileLabels[file] || file); };
 
                 let img = document.createElement('img');
                 img.src = imgIconSvg;
 
                 let span = document.createElement('span');
-                span.innerText = file.length > 15 ? file.substring(0, 10) + '...' : file;
+                span.innerText = fileLabels[file] || (file.length > 15 ? file.substring(0, 13) + '…' : file);
 
                 div.appendChild(img);
                 div.appendChild(span);
@@ -1186,15 +1233,40 @@
             });
         }
 
-        const liveSoundFiles = ['IMG_4614.jpg', 'IMG_4618.jpg', 'IMG_4652.jpg', 'IMG_4713.jpg', 'PulseBand.jpg', 'Ballards.jpg', 'stationwest.jpg'];
-        const studioFiles = ['1226073-heaven-can-wait_212351.jpg', '1226150-modern-day-cowboy_222251.jpg', 'ab67616d0000b2732dd42130be249b697264719c.jpeg', 'ThisIsMe_NEWDELUXE.png'];
-        const thumbnailFiles = ['41__Unmei.png', '42__Bloodbath_Thumbnail_w__ExIcon.png', '43__Auditory_Update.png', '44__The_Flawless.png', '45__XO.png', '46__The_End_Is_Here.png', '47__Black_Blizzard.png', 'OFFLINE.png'];
-        const photoFiles = ['PXL_20251119_050858109_4.jpg', 'PXL_20260219_165242551_LONG_EXPOSURE-01_COVER.jpg', '1BTrain.jpg', '2BTrain.jpg', '3BTrain.jpg', '4BTrain.jpg', '5BTrain.jpg', '6BTrain.jpg'];
+        // File lists mirror exactly what index.html shows in each section
+        const liveSoundFiles = [
+            'NorthCounty.jpeg', 'PulseBand.jpg',
+            'DanburyElicit.webp', 'FairfieldElicit.webp', 'WoodburyBrewing.webp', 'Ballards.jpg',
+            'WAV_Logo.jpg'
+        ];
+        const studioFiles = [
+            '1226150-modern-day-cowboy_222251.jpg', '1226073-heaven-can-wait_212351.jpg',
+            'ab67616d0000b2732dd42130be249b697264719c.jpeg', 'ThisIsMe_NEWDELUXE.png',
+            'Gemini_Generated_Image_mxacvzmxacvzmxac.png', 'Screenshot_20250924-132949.png',
+            'stationwest.jpg'
+        ];
+        const photoFiles = [
+            'IMG_4145.jpg', 'IMG_4410.jpg', 'IMG_4450.jpg', 'IMG_4462.jpg',
+            'IMG_5058__3_.jpg', 'IMG_5069.jpg',
+            'PXL_20260219_165242551_LONG_EXPOSURE-01_COVER.jpg',
+            'IMG_4618.jpg', 'IMG_4652.jpg',
+            'B_Logo.png'
+        ];
+        const bTrainFiles = [
+            '1BTrain.jpg', '2BTrain.jpg', '3BTrain.jpg',
+            '4BTrain.jpg', '5BTrain.jpg', '6BTrain.jpg'
+        ];
+        const thumbnailFiles = [
+            '46__The_End_Is_Here.png', '45__XO.png', '47__Black_Blizzard.png', 'OFFLINE.png',
+            '44__The_Flawless.png', '42__Bloodbath_Thumbnail_w__ExIcon.png',
+            '43__Auditory_Update.png', '41__Unmei.png'
+        ];
 
         injectFiles('liveSoundFolder', liveSoundFiles);
         injectFiles('studioFolder', studioFiles);
-        injectFiles('thumbnailsFolder', thumbnailFiles);
         injectFiles('photographyFolder', photoFiles);
+        injectFiles('bTrainFolder', bTrainFiles);
+        injectFiles('thumbnailsFolder', thumbnailFiles);
 
         function populateAggregators() {
             const progsContainer = document.getElementById('programsContainer');
