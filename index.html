@@ -359,10 +359,28 @@
     background: rgba(6,8,16,0.95); align-items: center; justify-content: center;
     cursor: none;
   }
-  .lightbox-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
+  .lightbox-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9500;
+    background: rgba(6,8,16,0.95); align-items: center; justify-content: center;
+    cursor: none;
+  }
+  .lightbox-overlay.active {
+    display: flex;
+    animation: zoomIn 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+  }
+  .lightbox-overlay.closing {
+    animation: zoomOut 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+  }
   .lightbox-img {
     max-width: 90vw; max-height: 88vh; object-fit: contain;
     box-shadow: 0 0 60px rgba(94,184,232,0.15);
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.3s ease 0.1s, transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) 0.1s;
+  }
+  .lightbox-overlay.active .lightbox-img {
+    opacity: 1;
+    transform: scale(1);
   }
   .lightbox-close {
     position: fixed; top: 28px; right: 40px;
@@ -716,7 +734,7 @@
     </div>
 
     <span class="credits-label" style="margin-top:48px;display:block;">B Train Foamer — Featured Work</span>
-    <div class="media-grid" style="grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));">
+    <div class="media-grid" style="grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));">
       <div class="media-card">
         <div class="media-card-inner" style="aspect-ratio:4/3;padding:0;overflow:hidden;">
           <img src="images/1BTrain.jpg" alt="B Train Foamer — Shot 1" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;">
