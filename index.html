@@ -180,6 +180,117 @@
   @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 
+  /* SPLASH / OPENING ANIMATION */
+  .splash {
+    position: fixed; inset: 0; z-index: 99999;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: var(--black);
+    overflow: hidden;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  .splash.hidden {
+    opacity: 0; visibility: hidden;
+    pointer-events: none;
+  }
+  .splash-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background-image: url('images/IMG_5040__1_.jpg');
+    background-size: cover;
+    background-position: center 30%;
+    background-repeat: no-repeat;
+    filter: saturate(0.12) brightness(0.5) sepia(0.4) hue-rotate(175deg) saturate(2.2);
+    transform: scale(1.08);
+    animation: splashZoom 5s ease-out forwards;
+  }
+  @keyframes splashZoom {
+    from { transform: scale(1.15); }
+    to { transform: scale(1.0); }
+  }
+  .splash-overlay {
+    position: absolute; inset: 0; z-index: 1;
+    background: radial-gradient(ellipse 70% 50% at 50% 50%, transparent 0%, rgba(6,8,16,0.7) 100%);
+  }
+  .splash-content {
+    position: relative; z-index: 2;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .splash-line {
+    width: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--blue), transparent);
+    margin-bottom: 32px;
+    animation: splashLine 0.6s 0.5s ease-out forwards;
+  }
+  @keyframes splashLine {
+    from { width: 0; opacity: 0; }
+    to { width: 220px; opacity: 1; }
+  }
+  .splash-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(5rem, 16vw, 12rem);
+    line-height: 0.85;
+    letter-spacing: 0.03em;
+    color: var(--white);
+    opacity: 0;
+    transform: translateY(60px);
+    animation: splashTitleIn 1s 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes splashTitleIn {
+    from { opacity: 0; transform: translateY(60px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .splash-title span {
+    display: block;
+    -webkit-text-stroke: 1.5px var(--blue);
+    color: transparent;
+    text-shadow: 0 0 40px rgba(94,184,232,0.3);
+  }
+  .splash-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1rem, 2vw, 1.4rem);
+    color: var(--ash);
+    letter-spacing: 0.15em;
+    margin-top: 24px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: splashSubIn 0.8s 1s ease forwards;
+  }
+  @keyframes splashSubIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .splash-skip {
+    position: absolute; bottom: 40px; z-index: 3;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: rgba(138,154,176,0.4);
+    background: none; border: none; cursor: pointer;
+    transition: color 0.3s;
+    opacity: 0;
+    animation: fadeIn 1s 0.2s ease forwards;
+  }
+  .splash-skip:hover { color: var(--blue); }
+  .splash-progress {
+    position: absolute; bottom: 0; left: 0; z-index: 3;
+    height: 2px;
+    background: var(--blue);
+    width: 0;
+    animation: splashProgress 2.5s linear forwards;
+  }
+  @keyframes splashProgress {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+  .splash-grain {
+    position: absolute; inset: 0; z-index: 2;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.04; pointer-events: none;
+  }
+
   /* BUTTONS */
   .btn-primary {
     font-family: 'DM Mono', monospace; font-size: 0.7rem;
@@ -456,6 +567,23 @@
 </style>
 </head>
 <body>
+
+<!-- SPLASH SCREEN -->
+<div class="splash" id="splash">
+  <div class="splash-bg"></div>
+  <div class="splash-overlay"></div>
+  <div class="splash-grain"></div>
+  <div class="splash-content">
+    <div class="splash-line"></div>
+    <div class="splash-title">
+      JDK<br>
+      <span>Studios</span>
+    </div>
+    <div class="splash-sub">Sound · Vision · Engineering</div>
+  </div>
+  <button class="splash-skip" id="splashSkip">Press ENTER to skip intro</button>
+  <div class="splash-progress"></div>
+</div>
 
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursorRing"></div>
@@ -973,6 +1101,33 @@
 </footer>
 
 <script>
+  // SPLASH — only show on first visit per session
+  const splash = document.getElementById('splash');
+  const splashSkip = document.getElementById('splashSkip');
+  const hasSeenSplash = sessionStorage.getItem('jdk_splash_seen');
+
+  function dismissSplash() {
+    splash.classList.add('hidden');
+    document.body.style.overflow = '';
+    setTimeout(() => { splash.style.display = 'none'; }, 900);
+    sessionStorage.setItem('jdk_splash_seen', '1');
+  }
+
+  if (hasSeenSplash) {
+    splash.style.display = 'none';
+    document.body.style.overflow = '';
+  } else {
+    document.body.style.overflow = 'hidden';
+    splashSkip.addEventListener('click', dismissSplash);
+    document.addEventListener('keydown', function onEnter(e) {
+      if (e.key === 'Enter') {
+        dismissSplash();
+        document.removeEventListener('keydown', onEnter);
+      }
+    });
+    setTimeout(dismissSplash, 3000);
+  }
+
   // Cursor — only on non-touch devices
   const cursor = document.getElementById('cursor');
   const ring = document.getElementById('cursorRing');
