@@ -201,7 +201,8 @@
     background-repeat: no-repeat;
     filter: saturate(0.12) brightness(0.5) sepia(0.4) hue-rotate(175deg) saturate(2.2);
     transform: scale(1.08);
-    animation: splashZoom 5s ease-out forwards;
+    opacity: 0;
+    animation: splashZoom 3.5s ease-out forwards, fadeIn 1s 0.1s ease forwards;
   }
   @keyframes splashZoom {
     from { transform: scale(1.15); }
@@ -228,7 +229,7 @@
   }
   .splash-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(5rem, 16vw, 12rem);
+    font-size: clamp(6rem, 19vw, 14.4rem);
     line-height: 0.85;
     letter-spacing: 0.03em;
     color: var(--white);
@@ -249,7 +250,7 @@
   .splash-sub {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size: clamp(1rem, 2vw, 1.4rem);
+    font-size: clamp(1.2rem, 2.4vw, 1.68rem);
     color: var(--ash);
     letter-spacing: 0.15em;
     margin-top: 24px;
@@ -264,7 +265,7 @@
   .splash-skip {
     position: absolute; bottom: 40px; z-index: 3;
     font-family: 'DM Mono', monospace;
-    font-size: 0.55rem;
+    font-size: 0.66rem;
     letter-spacing: 0.35em;
     text-transform: uppercase;
     color: rgba(138,154,176,0.4);
@@ -279,7 +280,7 @@
     height: 2px;
     background: var(--blue);
     width: 0;
-    animation: splashProgress 2.5s linear forwards;
+    animation: splashProgress 2.4s linear forwards;
   }
   @keyframes splashProgress {
     from { width: 0; }
@@ -581,7 +582,7 @@
     </div>
     <div class="splash-sub">Sound · Vision · Engineering</div>
   </div>
-  <button class="splash-skip" id="splashSkip">Press ENTER to skip intro</button>
+  <button class="splash-skip" id="splashSkip">Press ENTER / Click to skip intro</button>
   <div class="splash-progress"></div>
 </div>
 
@@ -1119,13 +1120,14 @@
   } else {
     document.body.style.overflow = 'hidden';
     splashSkip.addEventListener('click', dismissSplash);
+    splash.addEventListener('click', dismissSplash);
     document.addEventListener('keydown', function onEnter(e) {
       if (e.key === 'Enter') {
         dismissSplash();
         document.removeEventListener('keydown', onEnter);
       }
     });
-    setTimeout(dismissSplash, 3000);
+    setTimeout(dismissSplash, 2500);
   }
 
   // Cursor — only on non-touch devices
